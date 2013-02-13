@@ -10,18 +10,17 @@
 
 package starling.textures
 {
-    import flash.display.BitmapData;
-    import flash.display3D.Context3D;
-    import flash.display3D.Context3DTextureFormat;
-    import flash.display3D.textures.TextureBase;
-    
-    import starling.core.Starling;
-    import starling.events.Event;
 
-    /** A ConcreteTexture wraps a Stage3D texture object, storing the properties of the texture. */
+	import flash.display.BitmapData;
+	import flash.display3D.textures.TextureBase;
+
+	import starling.core.Starling;
+	import starling.events.Event;
+
+	/** A ConcreteTexture wraps a Stage3D texture object, storing the properties of the texture. */
     public class ConcreteTexture extends Texture
     {
-        private var mBase:TextureBase;
+//        private var mBase:TextureBase;
         private var mFormat:String;
         private var mWidth:int;
         private var mHeight:int;
@@ -39,7 +38,7 @@ package starling.textures
                                         scale:Number=1)
         {
             mScale = scale <= 0 ? 1.0 : scale;
-            mBase = base;
+//            mBase = base;
             mFormat = format;
             mWidth = width;
             mHeight = height;
@@ -51,7 +50,7 @@ package starling.textures
         /** Disposes the TextureBase object. */
         public override function dispose():void
         {
-            if (mBase) mBase.dispose();
+//            if (mBase) mBase.dispose();
             restoreOnLostContext(null); // removes event listener & data reference 
             super.dispose();
         }
@@ -72,25 +71,25 @@ package starling.textures
         
         private function onContextCreated(event:Event):void
         {
-            var context:Context3D = Starling.context;
+//            var context:Context3D = Starling.context;
             var bitmapData:BitmapData = mData as BitmapData;
             var atfData:AtfData = mData as AtfData;
-            var nativeTexture:flash.display3D.textures.Texture;
+//            var nativeTexture:flash.display3D.textures.Texture;
             
             if (bitmapData)
             {
-                nativeTexture = context.createTexture(mWidth, mHeight, 
-                    Context3DTextureFormat.BGRA, mOptimizedForRenderTexture);
-                Texture.uploadBitmapData(nativeTexture, bitmapData, mMipMapping);
+//                nativeTexture = context.createTexture(mWidth, mHeight,
+//                    Context3DTextureFormat.BGRA, mOptimizedForRenderTexture);
+//                Texture.uploadBitmapData(nativeTexture, bitmapData, mMipMapping);
             }
             else if (atfData)
             {
-                nativeTexture = context.createTexture(atfData.width, atfData.height, atfData.format,
-                                                      mOptimizedForRenderTexture);
-                Texture.uploadAtfData(nativeTexture, atfData.data);
+//                nativeTexture = context.createTexture(atfData.width, atfData.height, atfData.format,
+//                                                      mOptimizedForRenderTexture);
+//                Texture.uploadAtfData(nativeTexture, atfData.data);
             }
             
-            mBase = nativeTexture;
+//            mBase = nativeTexture;
         }
         
         // properties
@@ -99,7 +98,7 @@ package starling.textures
         public function get optimizedForRenderTexture():Boolean { return mOptimizedForRenderTexture; }
         
         /** @inheritDoc */
-        public override function get base():TextureBase { return mBase; }
+        public override function get base():TextureBase { return null; }
         
         /** @inheritDoc */
         public override function get root():ConcreteTexture { return this; }

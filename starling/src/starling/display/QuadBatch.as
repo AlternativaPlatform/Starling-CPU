@@ -10,38 +10,26 @@
 
 package starling.display
 {
-    import com.adobe.utils.AGALMiniAssembler;
 
 	import flash.display.BitmapData;
-
 	import flash.display.Graphics;
-	import flash.display.TriangleCulling;
+	import flash.geom.Matrix;
+	import flash.geom.Matrix3D;
+	import flash.geom.Rectangle;
+	import flash.utils.Dictionary;
+	import flash.utils.getQualifiedClassName;
 
-	import flash.display3D.Context3D;
-    import flash.display3D.Context3DProgramType;
-    import flash.display3D.Context3DTextureFormat;
-    import flash.display3D.Context3DVertexBufferFormat;
-    import flash.display3D.IndexBuffer3D;
-    import flash.display3D.VertexBuffer3D;
-    import flash.geom.Matrix;
-    import flash.geom.Matrix3D;
-    import flash.geom.Rectangle;
-    import flash.utils.Dictionary;
-    import flash.utils.getQualifiedClassName;
-    
-    import starling.core.RenderSupport;
-    import starling.core.Starling;
-    import starling.core.starling_internal;
-    import starling.errors.MissingContextError;
-    import starling.events.Event;
-    import starling.filters.FragmentFilter;
-    import starling.filters.FragmentFilterMode;
-    import starling.textures.Texture;
-    import starling.textures.TextureSmoothing;
-    import starling.utils.MatrixUtil;
-    import starling.utils.VertexData;
-    
-    use namespace starling_internal;
+	import starling.core.RenderSupport;
+	import starling.core.Starling;
+	import starling.core.starling_internal;
+	import starling.events.Event;
+	import starling.filters.FragmentFilter;
+	import starling.filters.FragmentFilterMode;
+	import starling.textures.Texture;
+	import starling.utils.MatrixUtil;
+	import starling.utils.VertexData;
+
+	use namespace starling_internal;
     
     /** Optimizes rendering of a number of quads with an identical state.
      * 
@@ -72,7 +60,7 @@ package starling.display
     public class QuadBatch extends DisplayObject
     {
         private static const QUAD_PROGRAM_NAME:String = "QB_q";
-        
+
         private var mNumQuads:int;
         private var mSyncRequired:Boolean;
 
@@ -81,9 +69,9 @@ package starling.display
         private var mSmoothing:String;
         
         private var mVertexData:VertexData;
-        private var mVertexBuffer:VertexBuffer3D;
+//        private var mVertexBuffer:VertexBuffer3D;
         private var mIndexData:Vector.<uint>;
-        private var mIndexBuffer:IndexBuffer3D;
+//        private var mIndexBuffer:IndexBuffer3D;
 
 		private var indicesData:Vector.<int> = new Vector.<int>();
 		private var verticesData:Vector.<Number> = new Vector.<Number>();
@@ -107,25 +95,12 @@ package starling.display
             // Handle lost context. We use the conventional event here (not the one from Starling)
             // so we're able to create a weak event listener; this avoids memory leaks when people 
             // forget to call "dispose" on the QuadBatch.
-            Starling.current.stage3D.addEventListener(Event.CONTEXT3D_CREATE, 
-                                                      onContextCreated, false, 0, true);
-        }
-        
-        /** Disposes vertex- and index-buffer. */
-        public override function dispose():void
-        {
-            Starling.current.stage3D.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
-            
-            if (mVertexBuffer) mVertexBuffer.dispose();
-            if (mIndexBuffer)  mIndexBuffer.dispose();
-            
-            super.dispose();
+            Starling.current.addEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
         }
         
         private function onContextCreated(event:Object):void
         {
-            createBuffers();
-            registerPrograms();
+            uploadData();
         }
         
         /** Creates a duplicate of the QuadBatch object. */
@@ -164,43 +139,17 @@ package starling.display
                 mIndexData[int(i*6+5)] = i*4 + 2;
             }
             
-            createBuffers();
-            registerPrograms();
+            uploadData();
         }
-        
-        private function createBuffers():void
-        {
-            var numVertices:int = mVertexData.numVertices;
-            var numIndices:int = mIndexData.length;
-            var context:Context3D = Starling.context;
 
-            if (mVertexBuffer)    mVertexBuffer.dispose();
-            if (mIndexBuffer)     mIndexBuffer.dispose();
-            if (numVertices == 0) return;
-            if (context == null)  throw new MissingContextError();
-            
-            mVertexBuffer = context.createVertexBuffer(numVertices, VertexData.ELEMENTS_PER_VERTEX);
-            mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, numVertices);
-            
-            mIndexBuffer = context.createIndexBuffer(numIndices);
-            mIndexBuffer.uploadFromVector(mIndexData, 0, numIndices);
-            
-            mSyncRequired = false;
-        }
-        
         /** Uploads the raw data of all batched quads to the vertex buffer. */
         private function syncBuffers():void
         {
-            if (mVertexBuffer == null)
-                createBuffers();
-            else
-            {
-                // as 3rd parameter, we could also use 'mNumQuads * 4', but on some GPU hardware (iOS!),
-                // this is slower than updating the complete buffer.
-                
-                mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, mVertexData.numVertices);
-                mSyncRequired = false;
-            }
+			uploadData();
+	        mSyncRequired = false;
+        }
+
+		private function uploadData():void {
 			var i:int;
 			var numVerts:int = numQuads*4;
 			uvsData.length = numVerts << 1;
@@ -214,13 +163,11 @@ package starling.display
 			for (i = 0; i < indicesData.length; i++) {
 				indicesData[i] = mIndexData[i];
 			}
-        }
+		}
 
 		private function updateVertices(matrix:Matrix):void {
 			var halfW:Number = Starling.current.renderSupport.backBufferWidth/2;
 			var halfH:Number = Starling.current.renderSupport.backBufferHeight/2;
-
-//			trace(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
 
 			var a:Number = matrix.a * halfW;
 			var b:Number = -matrix.b * halfH;
@@ -239,8 +186,6 @@ package starling.display
 				var y:Number = mVertexData.rawData[int(src + 1)];
 				verticesData[dst]          = a * x + c * y + tx;
 				verticesData[int(dst + 1)] = b * x + d * y + ty;
-//				verticesData[dst]          = x;
-//				verticesData[int(dst + 1)] = y;
 			}
 		}
 
@@ -254,12 +199,9 @@ package starling.display
             if (mSyncRequired) syncBuffers();
 
             var pma:Boolean = mVertexData.premultipliedAlpha;
-            var context:Context3D = Starling.context;
+//            var context:Context3D = Starling.context;
             var tinted:Boolean = mTinted || (parentAlpha != 1.0);
-            var programName:String = mTexture ? 
-                getImageProgramName(tinted, mTexture.mipMapping, mTexture.repeat, mTexture.format, mSmoothing) : 
-                QUAD_PROGRAM_NAME;
-            
+
             sRenderAlpha[0] = sRenderAlpha[1] = sRenderAlpha[2] = pma ? parentAlpha : 1.0;
             sRenderAlpha[3] = parentAlpha;
             
@@ -268,26 +210,26 @@ package starling.display
 
 			RenderSupport.setBlendFactors(pma, blendMode ? blendMode : this.blendMode);
             
-            context.setProgram(Starling.current.getProgram(programName));
-            context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 0, sRenderAlpha, 1);
-            context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 1, sRenderMatrix, true);
-            context.setVertexBufferAt(0, mVertexBuffer, VertexData.POSITION_OFFSET, 
-                                      Context3DVertexBufferFormat.FLOAT_2); 
+//            context.setProgram(Starling.current.getProgram(programName));
+//            context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 0, sRenderAlpha, 1);
+//            context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 1, sRenderMatrix, true);
+//            context.setVertexBufferAt(0, mVertexBuffer, VertexData.POSITION_OFFSET,
+//                                      Context3DVertexBufferFormat.FLOAT_2);
             
             if (mTexture == null || tinted)
-                context.setVertexBufferAt(1, mVertexBuffer, VertexData.COLOR_OFFSET, 
-                                          Context3DVertexBufferFormat.FLOAT_4);
+//                context.setVertexBufferAt(1, mVertexBuffer, VertexData.COLOR_OFFSET,
+//                                          Context3DVertexBufferFormat.FLOAT_4);
             
             if (mTexture)
             {
-                context.setTextureAt(0, mTexture.base);
-                context.setVertexBufferAt(2, mVertexBuffer, VertexData.TEXCOORD_OFFSET, 
-                                          Context3DVertexBufferFormat.FLOAT_2);
+//                context.setTextureAt(0, mTexture.base);
+//                context.setVertexBufferAt(2, mVertexBuffer, VertexData.TEXCOORD_OFFSET,
+//                                          Context3DVertexBufferFormat.FLOAT_2);
             }
 
 			var canvas:Graphics = Starling.current.nativeOverlay.graphics;
 			if (mTexture) {
-//				drawTriangles(canvas, mTexture.root.bitmapData, verticesData, indicesData, uvsData);
+				drawTriangles(canvas, mTexture.root.bitmapData, verticesData, indicesData, uvsData);
 //				canvas.beginBitmapFill(mTexture.root.bitmapData, null, true, true);
 //				canvas.drawTriangles(verticesData, indicesData, uvsData);
 			} else {
@@ -295,16 +237,16 @@ package starling.display
 //				canvas.drawTriangles(verticesData, indicesData);
 			}
 
-            context.drawTriangles(mIndexBuffer, 0, mNumQuads * 2);
+//            context.drawTriangles(mIndexBuffer, 0, mNumQuads * 2);
             
             if (mTexture)
             {
-                context.setTextureAt(0, null);
-                context.setVertexBufferAt(2, null);
+//                context.setTextureAt(0, null);
+//                context.setVertexBufferAt(2, null);
             }
             
-            context.setVertexBufferAt(1, null);
-            context.setVertexBufferAt(0, null);
+//            context.setVertexBufferAt(1, null);
+//            context.setVertexBufferAt(0, null);
         }
 
 		private static const drawMatrix:Matrix = new Matrix();
@@ -630,135 +572,6 @@ package starling.display
         public function get smoothing():String { return mSmoothing; }
         
         private function get capacity():int { return mVertexData.numVertices / 4; }
-        
-        // program management
-        
-        private static function registerPrograms():void
-        {
-            var target:Starling = Starling.current;
-            if (target.hasProgram(QUAD_PROGRAM_NAME)) return; // already registered
-            
-            var assembler:AGALMiniAssembler = new AGALMiniAssembler();
-            var vertexProgramCode:String;
-            var fragmentProgramCode:String;
-            
-            // this is the input data we'll pass to the shaders:
-            // 
-            // va0 -> position
-            // va1 -> color
-            // va2 -> texCoords
-            // vc0 -> alpha
-            // vc1 -> mvpMatrix
-            // fs0 -> texture
-            
-            // Quad:
-            
-            vertexProgramCode =
-                "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-                "mul v0, va1, vc0 \n";  // multiply alpha (vc0) with color (va1)
-            
-            fragmentProgramCode =
-                "mov oc, v0       \n";  // output color
-            
-            target.registerProgram(QUAD_PROGRAM_NAME,
-                assembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode),
-                assembler.assemble(Context3DProgramType.FRAGMENT, fragmentProgramCode));
-            
-            // Image:
-            // Each combination of tinted/repeat/mipmap/smoothing has its own fragment shader.
-            
-            for each (var tinted:Boolean in [true, false])
-            {
-                vertexProgramCode = tinted ?
-                    "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-                    "mul v0, va1, vc0 \n" + // multiply alpha (vc0) with color (va1)
-                    "mov v1, va2      \n"   // pass texture coordinates to fragment program
-                  :
-                    "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-                    "mov v1, va2      \n";  // pass texture coordinates to fragment program
-                    
-                fragmentProgramCode = tinted ?
-                    "tex ft1,  v1, fs0 <???> \n" + // sample texture 0
-                    "mul  oc, ft1,  v0       \n"   // multiply color with texel color
-                  :
-                    "tex  oc,  v1, fs0 <???> \n";  // sample texture 0
-                
-                var smoothingTypes:Array = [
-                    TextureSmoothing.NONE,
-                    TextureSmoothing.BILINEAR,
-                    TextureSmoothing.TRILINEAR
-                ];
-                
-                var formats:Array = [
-                    Context3DTextureFormat.BGRA,
-                    Context3DTextureFormat.COMPRESSED,
-                    "compressedAlpha" // use explicit string for compatibility
-                ];
-                
-                for each (var repeat:Boolean in [true, false])
-                {
-                    for each (var mipmap:Boolean in [true, false])
-                    {
-                        for each (var smoothing:String in smoothingTypes)
-                        {
-                            for each (var format:String in formats)
-                            {
-                                var options:Array = ["2d", repeat ? "repeat" : "clamp"];
-                                
-                                if (format == Context3DTextureFormat.COMPRESSED)
-                                    options.push("dxt1");
-                                else if (format == "compressedAlpha")
-                                    options.push("dxt5");
-                                
-                                if (smoothing == TextureSmoothing.NONE)
-                                    options.push("nearest", mipmap ? "mipnearest" : "mipnone");
-                                else if (smoothing == TextureSmoothing.BILINEAR)
-                                    options.push("linear", mipmap ? "mipnearest" : "mipnone");
-                                else
-                                    options.push("linear", mipmap ? "miplinear" : "mipnone");
-                                
-                                target.registerProgram(
-                                    getImageProgramName(tinted, mipmap, repeat, format, smoothing),
-                                    assembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode),
-                                    assembler.assemble(Context3DProgramType.FRAGMENT,
-                                        fragmentProgramCode.replace("???", options.join()))
-                                );
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        private static function getImageProgramName(tinted:Boolean, mipMap:Boolean=true, 
-                                                    repeat:Boolean=false, format:String="bgra",
-                                                    smoothing:String="bilinear"):String
-        {
-            var bitField:uint = 0;
-            
-            if (tinted) bitField |= 1;
-            if (mipMap) bitField |= 1 << 1;
-            if (repeat) bitField |= 1 << 2;
-            
-            if (smoothing == TextureSmoothing.NONE)
-                bitField |= 1 << 3;
-            else if (smoothing == TextureSmoothing.TRILINEAR)
-                bitField |= 1 << 4;
-            
-            if (format == Context3DTextureFormat.COMPRESSED)
-                bitField |= 1 << 5;
-            else if (format == "compressedAlpha")
-                bitField |= 1 << 6;
-            
-            var name:String = sProgramNameCache[bitField];
-            
-            if (name == null)
-            {
-                name = "QB_i." + bitField.toString(16);
-                sProgramNameCache[bitField] = name;
-            }
-            
-            return name;
-        }
+
     }
 }

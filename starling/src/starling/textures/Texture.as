@@ -10,26 +10,27 @@
 
 package starling.textures
 {
-    import flash.display.Bitmap;
-    import flash.display.BitmapData;
-    import flash.display3D.Context3D;
-    import flash.display3D.Context3DTextureFormat;
-    import flash.display3D.textures.TextureBase;
-    import flash.events.Event;
-    import flash.geom.Matrix;
-    import flash.geom.Point;
-    import flash.geom.Rectangle;
-    import flash.system.Capabilities;
-    import flash.utils.ByteArray;
-    import flash.utils.getQualifiedClassName;
-    
-    import starling.core.Starling;
-    import starling.errors.AbstractClassError;
-    import starling.errors.MissingContextError;
-    import starling.utils.VertexData;
-    import starling.utils.getNextPowerOfTwo;
 
-    /** <p>A texture stores the information that represents an image. It cannot be added to the
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+	import flash.display3D.Context3D;
+	import flash.display3D.Context3DTextureFormat;
+	import flash.display3D.textures.TextureBase;
+	import flash.events.Event;
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	import flash.system.Capabilities;
+	import flash.utils.ByteArray;
+	import flash.utils.getQualifiedClassName;
+
+	import starling.core.Starling;
+	import starling.errors.AbstractClassError;
+	import starling.errors.MissingContextError;
+	import starling.utils.VertexData;
+	import starling.utils.getNextPowerOfTwo;
+
+	/** <p>A texture stores the information that represents an image. It cannot be added to the
      *  display list directly; instead it has to be mapped onto a display object. In Starling, 
      *  that display object is the class "Image".</p>
      * 
@@ -132,13 +133,13 @@ package starling.textures
             var origHeight:int  = data.height;
             var legalWidth:int  = getNextPowerOfTwo(origWidth);
             var legalHeight:int = getNextPowerOfTwo(origHeight);
-            var context:Context3D = Starling.context;
+//            var context:Context3D = Starling.context;
             var potData:BitmapData;
             
-            if (context == null) throw new MissingContextError();
+//            if (context == null) throw new MissingContextError();
             
-            var nativeTexture:flash.display3D.textures.Texture = context.createTexture(
-                legalWidth, legalHeight, Context3DTextureFormat.BGRA, optimizeForRenderToTexture);
+//            var nativeTexture:flash.display3D.textures.Texture = context.createTexture(
+//                legalWidth, legalHeight, Context3DTextureFormat.BGRA, optimizeForRenderToTexture);
             
             if (legalWidth > origWidth || legalHeight > origHeight)
             {
@@ -147,10 +148,10 @@ package starling.textures
                 data = potData;
             }
             
-            uploadBitmapData(nativeTexture, data, generateMipMaps);
+//            uploadBitmapData(nativeTexture, data, generateMipMaps);
             
             var concreteTexture:ConcreteTexture = new ConcreteTexture(
-                nativeTexture, Context3DTextureFormat.BGRA, legalWidth, legalHeight,
+                null, Context3DTextureFormat.BGRA, legalWidth, legalHeight,
                 generateMipMaps, true, optimizeForRenderToTexture, scale);
 
 			concreteTexture.bitmapData = data;

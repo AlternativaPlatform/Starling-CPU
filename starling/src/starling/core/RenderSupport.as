@@ -10,27 +10,24 @@
 
 package starling.core
 {
-    import com.adobe.utils.AGALMiniAssembler;
-    
-    import flash.display3D.Context3D;
-    import flash.display3D.Context3DProgramType;
-    import flash.display3D.Program3D;
-    import flash.geom.Matrix;
-    import flash.geom.Matrix3D;
-    import flash.geom.Point;
-    import flash.geom.Rectangle;
-    
-    import starling.display.BlendMode;
-    import starling.display.DisplayObject;
-    import starling.display.Quad;
-    import starling.display.QuadBatch;
-    import starling.errors.MissingContextError;
-    import starling.textures.Texture;
-    import starling.utils.Color;
-    import starling.utils.MatrixUtil;
-    import starling.utils.RectangleUtil;
 
-    /** A class that contains helper methods simplifying Stage3D rendering.
+	import com.adobe.utils.AGALMiniAssembler;
+
+	import flash.display3D.Program3D;
+	import flash.geom.Matrix;
+	import flash.geom.Matrix3D;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+
+	import starling.display.BlendMode;
+	import starling.display.DisplayObject;
+	import starling.display.Quad;
+	import starling.display.QuadBatch;
+	import starling.textures.Texture;
+	import starling.utils.MatrixUtil;
+	import starling.utils.RectangleUtil;
+
+	/** A class that contains helper methods simplifying Stage3D rendering.
      *
      *  A RenderSupport instance is passed to any "render" method of display objects. 
      *  It allows manipulation of the current transformation matrix (similar to the matrix 
@@ -222,11 +219,11 @@ package starling.core
         public function get renderTarget():Texture { return mRenderTarget; }
         public function set renderTarget(target:Texture):void 
         {
-            mRenderTarget = target;
+//            mRenderTarget = target;
             applyClipRect();
             
-            if (target) Starling.context.setRenderToTexture(target.base);
-            else        Starling.context.setRenderToBackBuffer();
+//            if (target) Starling.context.setRenderToTexture(target.base);
+//            else        Starling.context.setRenderToBackBuffer();
         }
         
         /** Configures the back buffer on the current context3D. By using this method, Starling
@@ -238,9 +235,9 @@ package starling.core
         {
             mBackBufferWidth  = width;
             mBackBufferHeight = height;
-            Starling.context.configureBackBuffer(width, height, antiAlias, enableDepthAndStencil);
+//            Starling.context.configureBackBuffer(width, height, antiAlias, enableDepthAndStencil);
         }
-        
+
         /** The width of the back buffer, as it was configured in the last call to 
          *  'RenderSupport.configureBackBuffer()'. Beware: changing this value does not actually
          *  resize the back buffer; the setter should only be used to inform Starling about the
@@ -301,8 +298,8 @@ package starling.core
         {
             finishQuadBatch();
             
-            var context:Context3D = Starling.context;
-            if (context == null) return;
+//            var context:Context3D = Starling.context;
+//            if (context == null) return;
             
             if (mClipRectStackSize > 0)
             {
@@ -326,11 +323,11 @@ package starling.core
                 if (sRectangle.width < 1 || sRectangle.height < 1)
                     sRectangle.setTo(0, 0, 1, 1);
                 
-                context.setScissorRectangle(sRectangle);
+//                context.setScissorRectangle(sRectangle);
             }
             else
             {
-                context.setScissorRectangle(null);
+//                context.setScissorRectangle(null);
             }
         }
         
@@ -390,17 +387,17 @@ package starling.core
         public static function setBlendFactors(premultipliedAlpha:Boolean, blendMode:String="normal"):void
         {
             var blendFactors:Array = BlendMode.getBlendFactors(blendMode, premultipliedAlpha); 
-            Starling.context.setBlendFactors(blendFactors[0], blendFactors[1]);
+//            Starling.context.setBlendFactors(blendFactors[0], blendFactors[1]);
         }
         
         /** Clears the render context with a certain color and alpha value. */
         public static function clear(rgb:uint=0, alpha:Number=0.0):void
         {
-            Starling.context.clear(
-                Color.getRed(rgb)   / 255.0, 
-                Color.getGreen(rgb) / 255.0, 
-                Color.getBlue(rgb)  / 255.0,
-                alpha);
+//            Starling.context.clear(
+//                Color.getRed(rgb)   / 255.0,
+//                Color.getGreen(rgb) / 255.0,
+//                Color.getBlue(rgb)  / 255.0,
+//                alpha);
         }
         
         /** Clears the render context with a certain color and alpha value. */
@@ -415,22 +412,22 @@ package starling.core
         public static function assembleAgal(vertexShader:String, fragmentShader:String,
                                             resultProgram:Program3D=null):Program3D
         {
-            if (resultProgram == null) 
-            {
-                var context:Context3D = Starling.context;
-                if (context == null) throw new MissingContextError();
-                resultProgram = context.createProgram();
-            }
+//            if (resultProgram == null)
+//            {
+//                var context:Context3D = Starling.context;
+//                if (context == null) throw new MissingContextError();
+//                resultProgram = context.createProgram();
+//            }
             
-            resultProgram.upload(
-                sAssembler.assemble(Context3DProgramType.VERTEX, vertexShader),
-                sAssembler.assemble(Context3DProgramType.FRAGMENT, fragmentShader));
+//            resultProgram.upload(
+//                sAssembler.assemble(Context3DProgramType.VERTEX, vertexShader),
+//                sAssembler.assemble(Context3DProgramType.FRAGMENT, fragmentShader));
             
             return resultProgram;
         }
         
         // statistics
-        
+
         /** Raises the draw count by a specific value. Call this method in custom render methods
          *  to keep the statistics display in sync. */
         public function raiseDrawCount(value:uint=1):void { mDrawCount += value; }
