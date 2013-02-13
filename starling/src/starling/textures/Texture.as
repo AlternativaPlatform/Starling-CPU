@@ -89,6 +89,8 @@ package starling.textures
         
         /** helper object */
         private static var sOrigin:Point = new Point();
+
+		public var bitmapData:BitmapData;
         
         /** @private */
         public function Texture()
@@ -150,11 +152,13 @@ package starling.textures
             var concreteTexture:ConcreteTexture = new ConcreteTexture(
                 nativeTexture, Context3DTextureFormat.BGRA, legalWidth, legalHeight,
                 generateMipMaps, true, optimizeForRenderToTexture, scale);
+
+			concreteTexture.bitmapData = data;
             
             if (Starling.handleLostContext)
                 concreteTexture.restoreOnLostContext(data);
-            else if (potData)
-                potData.dispose();
+//            else if (potData)
+//                potData.dispose();
             
             if (origWidth == legalWidth && origHeight == legalHeight)
                 return concreteTexture;
@@ -221,11 +225,11 @@ package starling.textures
         {
             if (scale <= 0) scale = Starling.contentScaleFactor;
             
-            var bitmapData:BitmapData = new BitmapData(width*scale, height*scale, true, color);
+            var bitmapData:BitmapData = new BitmapData(width*scale, height*scale, false, color);
             var texture:Texture = fromBitmapData(bitmapData, false, optimizeForRenderToTexture, scale);
             
-            if (!Starling.handleLostContext)
-                bitmapData.dispose();
+//            if (!Starling.handleLostContext)
+//                bitmapData.dispose();
             
             return texture;
         }

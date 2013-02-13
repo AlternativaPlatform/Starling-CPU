@@ -11,8 +11,13 @@
 package starling.display
 {
     import com.adobe.utils.AGALMiniAssembler;
-    
-    import flash.display3D.Context3D;
+
+	import flash.display.BitmapData;
+
+	import flash.display.Graphics;
+	import flash.display.TriangleCulling;
+
+	import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
     import flash.display3D.Context3DTextureFormat;
     import flash.display3D.Context3DVertexBufferFormat;
@@ -79,6 +84,10 @@ package starling.display
         private var mVertexBuffer:VertexBuffer3D;
         private var mIndexData:Vector.<uint>;
         private var mIndexBuffer:IndexBuffer3D;
+
+		private var indicesData:Vector.<int> = new Vector.<int>();
+		private var verticesData:Vector.<Number> = new Vector.<Number>();
+		private var uvsData:Vector.<Number> = new Vector.<Number>();
 
         /** Helper objects. */
         private static var sHelperMatrix:Matrix = new Matrix();
@@ -192,9 +201,50 @@ package starling.display
                 mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, mVertexData.numVertices);
                 mSyncRequired = false;
             }
+			var i:int;
+			var numVerts:int = numQuads*4;
+			uvsData.length = numVerts << 1;
+			for (i = 0; i < numVerts; i++) {
+				var src:int = i << 3;
+				var dst:int = i << 1;
+				uvsData[dst] = mVertexData.rawData[int(src + 6)];
+				uvsData[int(dst + 1)] = mVertexData.rawData[int(src + 7)];
+			}
+			indicesData.length = numQuads*6;
+			for (i = 0; i < indicesData.length; i++) {
+				indicesData[i] = mIndexData[i];
+			}
         }
-        
-        /** Renders the current batch with custom settings for model-view-projection matrix, alpha 
+
+		private function updateVertices(matrix:Matrix):void {
+			var halfW:Number = Starling.current.renderSupport.backBufferWidth/2;
+			var halfH:Number = Starling.current.renderSupport.backBufferHeight/2;
+
+//			trace(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
+
+			var a:Number = matrix.a * halfW;
+			var b:Number = -matrix.b * halfH;
+			var c:Number = matrix.c * halfW;
+			var d:Number = -matrix.d * halfH;
+			var tx:Number = matrix.tx * halfW + halfW;
+			var ty:Number = - matrix.ty * halfH + halfH;
+
+			var i:int;
+			var numVerts:int = numQuads*4;
+			verticesData.length = numVerts << 1;
+			for (i = 0; i < numVerts; i++) {
+				var src:int = i << 3;
+				var dst:int = i << 1;
+				var x:Number = mVertexData.rawData[src];
+				var y:Number = mVertexData.rawData[int(src + 1)];
+				verticesData[dst]          = a * x + c * y + tx;
+				verticesData[int(dst + 1)] = b * x + d * y + ty;
+//				verticesData[dst]          = x;
+//				verticesData[int(dst + 1)] = y;
+			}
+		}
+
+        /** Renders the current batch with custom settings for model-view-projection matrix, alpha
          *  and blend mode. This makes it possible to render batches that are not part of the 
          *  display list. */ 
         public function renderCustom(mvpMatrix:Matrix, parentAlpha:Number=1.0,
@@ -202,7 +252,7 @@ package starling.display
         {
             if (mNumQuads == 0) return;
             if (mSyncRequired) syncBuffers();
-            
+
             var pma:Boolean = mVertexData.premultipliedAlpha;
             var context:Context3D = Starling.context;
             var tinted:Boolean = mTinted || (parentAlpha != 1.0);
@@ -214,7 +264,9 @@ package starling.display
             sRenderAlpha[3] = parentAlpha;
             
             MatrixUtil.convertTo3D(mvpMatrix, sRenderMatrix);
-            RenderSupport.setBlendFactors(pma, blendMode ? blendMode : this.blendMode);
+			updateVertices(mvpMatrix);
+
+			RenderSupport.setBlendFactors(pma, blendMode ? blendMode : this.blendMode);
             
             context.setProgram(Starling.current.getProgram(programName));
             context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 0, sRenderAlpha, 1);
@@ -232,7 +284,17 @@ package starling.display
                 context.setVertexBufferAt(2, mVertexBuffer, VertexData.TEXCOORD_OFFSET, 
                                           Context3DVertexBufferFormat.FLOAT_2);
             }
-            
+
+			var canvas:Graphics = Starling.current.nativeOverlay.graphics;
+			if (mTexture) {
+//				drawTriangles(canvas, mTexture.root.bitmapData, verticesData, indicesData, uvsData);
+//				canvas.beginBitmapFill(mTexture.root.bitmapData, null, true, true);
+//				canvas.drawTriangles(verticesData, indicesData, uvsData);
+			} else {
+//				canvas.beginFill(0xFF9D00, 0.5);
+//				canvas.drawTriangles(verticesData, indicesData);
+			}
+
             context.drawTriangles(mIndexBuffer, 0, mNumQuads * 2);
             
             if (mTexture)
@@ -244,6 +306,61 @@ package starling.display
             context.setVertexBufferAt(1, null);
             context.setVertexBufferAt(0, null);
         }
+
+		private static const drawMatrix:Matrix = new Matrix();
+		private function drawTriangles(graphics:Graphics, bitmap:BitmapData, vertices:Vector.<Number>, indices:Vector.<int>, uvs:Vector.<Number>):void {
+			// TODO: use calculated bitmap fill when uv vertices has affine transformation
+			var numIndices:int = indices.length;
+			for (var i:int = 0; i < numIndices; i += 3) {
+				var a:int = indices[i] << 1;
+				var b:int = indices[int(i + 1)] << 1;
+				var c:int = indices[int(i + 2)] << 1;
+				var ax:Number = vertices[a];
+				var ay:Number = vertices[int(a + 1)];
+				var bx:Number = vertices[b];
+				var by:Number = vertices[int(b + 1)];
+				var cx:Number = vertices[c];
+				var cy:Number = vertices[int(c + 1)];
+				var abx:Number = bx - ax;
+				var aby:Number = by - ay;
+				var acx:Number = cx - ax;
+				var acy:Number = cy - ay;
+				var au:Number = uvs[a];
+				var av:Number = uvs[int(a + 1)];
+				var abu:Number = (uvs[b] - au);
+				var abv:Number = (uvs[int(b + 1)] - av);
+				var acu:Number = (uvs[c] - au);
+				var acv:Number = (uvs[int(c + 1)] - av);
+				var uvDet:Number = abu*acv - acu*abv;
+				if (uvDet > 0.0001 || uvDet < -0.0001) {
+					var m11:Number = acv/uvDet;
+					var m12:Number = -acu/uvDet;
+//					var m13:Number = (acu*av - acv*au)/uvDet;
+					var m21:Number = -abv/uvDet;
+					var m22:Number = abu/uvDet;
+//					var m23:Number = (au*abv - av*abu)/uvDet;
+//					var m33:Number = uvDet;
+
+					drawMatrix.a = abx*m11 + acx*m21;
+					drawMatrix.c = abx*m12 + acx*m22;
+					drawMatrix.b = aby*m11 + acy*m21;
+					drawMatrix.d = aby*m12 + acy*m22;
+					drawMatrix.tx = -au*drawMatrix.a - av*drawMatrix.c + ax;
+					drawMatrix.ty = -au*drawMatrix.b - av*drawMatrix.d + ay;
+
+					drawMatrix.a /= bitmap.width;
+					drawMatrix.c /= bitmap.height;
+					drawMatrix.b /= bitmap.width;
+					drawMatrix.d /= bitmap.height;
+
+					graphics.beginBitmapFill(bitmap, drawMatrix, false, true);
+//					graphics.beginFill(uint.MAX_VALUE*Math.random(), 0.8);
+					graphics.moveTo(ax, ay);
+					graphics.lineTo(bx, by);
+					graphics.lineTo(cx, cy);
+				}
+			}
+		}
         
         /** Resets the batch. The vertex- and index-buffers remain their size, so that they
          *  can be reused quickly. */  

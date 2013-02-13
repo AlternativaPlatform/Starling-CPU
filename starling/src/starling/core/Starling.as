@@ -166,6 +166,11 @@ package starling.core
         private var mJuggler:Juggler;
         private var mStarted:Boolean;        
         private var mSupport:RenderSupport;
+
+		public function get renderSupport():RenderSupport {
+			return mSupport;
+		}
+
         private var mTouchProcessor:TouchProcessor;
         private var mAntiAliasing:int;
         private var mSimulateMultitouch:Boolean;
@@ -452,6 +457,7 @@ package starling.core
             mNativeOverlay.y = mViewPort.y;
             mNativeOverlay.scaleX = mViewPort.width / mStage.stageWidth;
             mNativeOverlay.scaleY = mViewPort.height / mStage.stageHeight;
+			mNativeOverlay.graphics.clear();
         }
         
         private function showFatalError(message:String):void
