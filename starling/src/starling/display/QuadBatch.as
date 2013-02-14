@@ -178,12 +178,13 @@ package starling.display
 
 			var i:int;
 			var numVerts:int = numQuads*4;
+			var srcVertices:Vector.<Number> = mVertexData.rawData;
 			verticesData.length = numVerts << 1;
 			for (i = 0; i < numVerts; i++) {
 				var src:int = i << 3;
 				var dst:int = i << 1;
-				var x:Number = mVertexData.rawData[src];
-				var y:Number = mVertexData.rawData[int(src + 1)];
+				var x:Number = srcVertices[src];
+				var y:Number = srcVertices[int(src + 1)];
 				verticesData[dst]          = a * x + c * y + tx;
 				verticesData[int(dst + 1)] = b * x + d * y + ty;
 			}
@@ -195,6 +196,7 @@ package starling.display
         public function renderCustom(mvpMatrix:Matrix, parentAlpha:Number=1.0,
                                      blendMode:String=null):void
         {
+
             if (mNumQuads == 0) return;
             if (mSyncRequired) syncBuffers();
 
@@ -230,7 +232,7 @@ package starling.display
 			var canvas:Graphics = Starling.current.nativeOverlay.graphics;
 			if (mTexture) {
 				drawTriangles(canvas, mTexture.root.bitmapData, verticesData, indicesData, uvsData);
-//				canvas.beginBitmapFill(mTexture.root.bitmapData, null, true, true);
+//				canvas.beginBitmapFill(mTexture.root.bitmapData, null, false, true);
 //				canvas.drawTriangles(verticesData, indicesData, uvsData);
 			} else {
 //				canvas.beginFill(0xFF9D00, 0.5);
@@ -252,6 +254,8 @@ package starling.display
 		private static const drawMatrix:Matrix = new Matrix();
 		private function drawTriangles(graphics:Graphics, bitmap:BitmapData, vertices:Vector.<Number>, indices:Vector.<int>, uvs:Vector.<Number>):void {
 			// TODO: use calculated bitmap fill when uv vertices has affine transformation
+			var bmdW:int = bitmap.width;
+			var bmdH:int = bitmap.height;
 			var numIndices:int = indices.length;
 			for (var i:int = 0; i < numIndices; i += 3) {
 				var a:int = indices[i] << 1;
@@ -269,19 +273,18 @@ package starling.display
 				var acy:Number = cy - ay;
 				var au:Number = uvs[a];
 				var av:Number = uvs[int(a + 1)];
-				var abu:Number = (uvs[b] - au);
-				var abv:Number = (uvs[int(b + 1)] - av);
-				var acu:Number = (uvs[c] - au);
-				var acv:Number = (uvs[int(c + 1)] - av);
+				var abu:Number = (uvs[b] - au)*bmdW;
+				var abv:Number = (uvs[int(b + 1)] - av)*bmdH;
+				var acu:Number = (uvs[c] - au)*bmdW;
+				var acv:Number = (uvs[int(c + 1)] - av)*bmdH;
+				au *= bmdW;
+				av *= bmdH;
 				var uvDet:Number = abu*acv - acu*abv;
-				if (uvDet > 0.0001 || uvDet < -0.0001) {
+				if (uvDet > 0.01 || uvDet < -0.01) {
 					var m11:Number = acv/uvDet;
 					var m12:Number = -acu/uvDet;
-//					var m13:Number = (acu*av - acv*au)/uvDet;
 					var m21:Number = -abv/uvDet;
 					var m22:Number = abu/uvDet;
-//					var m23:Number = (au*abv - av*abu)/uvDet;
-//					var m33:Number = uvDet;
 
 					drawMatrix.a = abx*m11 + acx*m21;
 					drawMatrix.c = abx*m12 + acx*m22;
@@ -290,16 +293,17 @@ package starling.display
 					drawMatrix.tx = -au*drawMatrix.a - av*drawMatrix.c + ax;
 					drawMatrix.ty = -au*drawMatrix.b - av*drawMatrix.d + ay;
 
-					drawMatrix.a /= bitmap.width;
-					drawMatrix.c /= bitmap.height;
-					drawMatrix.b /= bitmap.width;
-					drawMatrix.d /= bitmap.height;
+//					drawMatrix.a /= bitmap.width;
+//					drawMatrix.c /= bitmap.height;
+//					drawMatrix.b /= bitmap.width;
+//					drawMatrix.d /= bitmap.height;
 
 					graphics.beginBitmapFill(bitmap, drawMatrix, false, true);
-//					graphics.beginFill(uint.MAX_VALUE*Math.random(), 0.8);
 					graphics.moveTo(ax, ay);
 					graphics.lineTo(bx, by);
 					graphics.lineTo(cx, cy);
+				} else {
+//					trace("ERROR: uv determinant:", uvDet);
 				}
 			}
 		}
@@ -401,6 +405,7 @@ package starling.display
             else if (mTexture == null && texture == null) return false;
             else if (mTexture != null && texture != null)
                 return mTexture.base != texture.base ||
+					   mTexture.root.bitmapData != texture.root.bitmapData ||
                        mTexture.repeat != texture.repeat ||
                        mSmoothing != smoothing ||
                        mTinted != (tinted || parentAlpha != 1.0) ||

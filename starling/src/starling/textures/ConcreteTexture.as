@@ -67,6 +67,7 @@ package starling.textures
                 Starling.current.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
             
             mData = data;
+			if (data is BitmapData) bitmapData = BitmapData(data);
         }
         
         private function onContextCreated(event:Event):void

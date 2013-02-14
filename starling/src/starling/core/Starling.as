@@ -33,6 +33,7 @@ package starling.core
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
+	import flash.utils.setTimeout;
 
 	import starling.animation.Juggler;
 	import starling.display.DisplayObject;
@@ -243,7 +244,7 @@ package starling.core
             stage.addEventListener(Event.RESIZE, onResize, false, 0, true);
             stage.addEventListener(Event.MOUSE_LEAVE, onMouseLeave, false, 0, true);
 
-			initialize();
+			setTimeout(initialize, 1);
         }
         
         /** Disposes all children of the stage and the render context; removes all registered
