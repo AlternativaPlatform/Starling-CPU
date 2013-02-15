@@ -13,11 +13,7 @@ package starling.textures
 
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
-	import flash.display3D.Context3D;
-	import flash.display3D.Context3DTextureFormat;
 	import flash.display3D.textures.TextureBase;
-	import flash.events.Event;
-	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.system.Capabilities;
@@ -26,7 +22,6 @@ package starling.textures
 
 	import starling.core.Starling;
 	import starling.errors.AbstractClassError;
-	import starling.errors.MissingContextError;
 	import starling.utils.VertexData;
 	import starling.utils.getNextPowerOfTwo;
 
@@ -133,13 +128,7 @@ package starling.textures
             var origHeight:int  = data.height;
             var legalWidth:int  = getNextPowerOfTwo(origWidth);
             var legalHeight:int = getNextPowerOfTwo(origHeight);
-//            var context:Context3D = Starling.context;
             var potData:BitmapData;
-            
-//            if (context == null) throw new MissingContextError();
-            
-//            var nativeTexture:flash.display3D.textures.Texture = context.createTexture(
-//                legalWidth, legalHeight, Context3DTextureFormat.BGRA, optimizeForRenderToTexture);
             
             if (legalWidth > origWidth || legalHeight > origHeight)
             {
@@ -148,19 +137,15 @@ package starling.textures
                 data = potData;
             }
             
-//            uploadBitmapData(nativeTexture, data, generateMipMaps);
-            
             var concreteTexture:ConcreteTexture = new ConcreteTexture(
-                null, Context3DTextureFormat.BGRA, legalWidth, legalHeight,
+                null, null, legalWidth, legalHeight,
                 generateMipMaps, true, optimizeForRenderToTexture, scale);
 
 			concreteTexture.bitmapData = data;
             
             if (Starling.handleLostContext)
                 concreteTexture.restoreOnLostContext(data);
-//            else if (potData)
-//                potData.dispose();
-            
+
             if (origWidth == legalWidth && origHeight == legalHeight)
                 return concreteTexture;
             else
@@ -180,6 +165,8 @@ package starling.textures
         public static function fromAtfData(data:ByteArray, scale:Number=1, useMipMaps:Boolean=true, 
                                            loadAsync:Function=null):Texture
         {
+			// TODO: make stub
+/*
             const eventType:String = "textureReady"; // defined here for backwards compatibility
             
             var context:Context3D = Starling.context;
@@ -210,6 +197,8 @@ package starling.textures
                 if (loadAsync.length == 1) loadAsync(concreteTexture);
                 else loadAsync();
             }
+*/
+			return null;
         }
         
         /** Creates a texture with a certain size and color.
@@ -228,13 +217,9 @@ package starling.textures
             
             var bitmapData:BitmapData = new BitmapData(width*scale, height*scale, false, color);
             var texture:Texture = fromBitmapData(bitmapData, false, optimizeForRenderToTexture, scale);
-            
-//            if (!Starling.handleLostContext)
-//                bitmapData.dispose();
-            
             return texture;
         }
-        
+
         /** Creates an empty texture of a certain size. Useful mainly for render textures. 
          *  Beware that the texture can only be used after you either upload some color data or
          *  clear the texture while it is an active render target. 
@@ -255,15 +240,8 @@ package starling.textures
             var origHeight:int = height * scale;
             var legalWidth:int  = getNextPowerOfTwo(origWidth);
             var legalHeight:int = getNextPowerOfTwo(origHeight);
-            var format:String = Context3DTextureFormat.BGRA;
-            var context:Context3D = Starling.context;
-            
-            if (context == null) throw new MissingContextError();
-            
-            var nativeTexture:flash.display3D.textures.Texture = context.createTexture(
-                legalWidth, legalHeight, Context3DTextureFormat.BGRA, optimizeForRenderToTexture);
-            
-            var concreteTexture:ConcreteTexture = new ConcreteTexture(nativeTexture, format,
+
+            var concreteTexture:ConcreteTexture = new ConcreteTexture(null, null,
                 legalWidth, legalHeight, false, premultipliedAlpha, optimizeForRenderToTexture, scale);
             
             if (origWidth == legalWidth && origHeight == legalHeight)
@@ -299,43 +277,18 @@ package starling.textures
                 vertexData.translateVertex(vertexID + 3, -deltaRight, -deltaBottom);
             }
         }
-        
+
         /** @private Uploads the bitmap data to the native texture, optionally creating mipmaps. */
         internal static function uploadBitmapData(nativeTexture:flash.display3D.textures.Texture,
                                                   data:BitmapData, generateMipmaps:Boolean):void
         {
-            nativeTexture.uploadFromBitmapData(data);
-            
-            if (generateMipmaps && data.width > 1 && data.height > 1)
-            {
-                var currentWidth:int  = data.width  >> 1;
-                var currentHeight:int = data.height >> 1;
-                var level:int = 1;
-                var canvas:BitmapData = new BitmapData(currentWidth, currentHeight, true, 0);
-                var transform:Matrix = new Matrix(.5, 0, 0, .5);
-                var bounds:Rectangle = new Rectangle();
-                
-                while (currentWidth >= 1 || currentHeight >= 1)
-                {
-                    bounds.width = currentWidth; bounds.height = currentHeight;
-                    canvas.fillRect(bounds, 0);
-                    canvas.draw(data, transform, null, null, null, true);
-                    nativeTexture.uploadFromBitmapData(canvas, level++);
-                    transform.scale(0.5, 0.5);
-                    currentWidth  = currentWidth  >> 1;
-                    currentHeight = currentHeight >> 1;
-                }
-                
-                canvas.dispose();
-            }
         }
-        
+
         /** @private Uploads ATF data from a ByteArray to a native texture. */
         internal static function uploadAtfData(nativeTexture:flash.display3D.textures.Texture, 
                                                data:ByteArray, offset:int=0, 
                                                async:Boolean=false):void
         {
-            nativeTexture.uploadCompressedTextureFromByteArray(data, offset, async);
         }
         
         // properties
@@ -379,7 +332,7 @@ package starling.textures
         public function get root():ConcreteTexture { return null; }
         
         /** The <code>Context3DTextureFormat</code> of the underlying texture data. */
-        public function get format():String { return Context3DTextureFormat.BGRA; }
+        public function get format():String { return null; }
         
         /** Indicates if the texture contains mip maps. */ 
         public function get mipMapping():Boolean { return false; }

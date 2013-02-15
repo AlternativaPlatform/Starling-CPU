@@ -11,8 +11,6 @@
 package starling.core
 {
 
-	import com.adobe.utils.AGALMiniAssembler;
-
 	import flash.display3D.Program3D;
 	import flash.geom.Matrix;
 	import flash.geom.Matrix3D;
@@ -60,8 +58,7 @@ package starling.core
         /** helper objects */
         private static var sPoint:Point = new Point();
         private static var sRectangle:Rectangle = new Rectangle();
-        private static var sAssembler:AGALMiniAssembler = new AGALMiniAssembler();
-        
+
         // construction
         
         /** Creates a new RenderSupport object with an empty matrix stack. */

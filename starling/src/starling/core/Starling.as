@@ -21,15 +21,11 @@ package starling.core
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
-	import flash.events.TouchEvent;
 	import flash.geom.Rectangle;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
-	import flash.ui.Mouse;
-	import flash.ui.Multitouch;
-	import flash.ui.MultitouchInputMode;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
@@ -209,14 +205,14 @@ package starling.core
             if (stage == null) throw new ArgumentError("Stage must not be null");
             if (rootClass == null) throw new ArgumentError("Root class must not be null");
             if (viewPort == null) viewPort = new Rectangle(0, 0, stage.stageWidth, stage.stageHeight);
-            if (stage3D == null) stage3D = stage.stage3Ds[0];
-            
+
             makeCurrent();
             
             mRootClass = rootClass;
             mViewPort = viewPort;
             mPreviousViewPort = new Rectangle();
-            mStage = new Stage(viewPort.width, viewPort.height, stage.color);
+			// color unused
+            mStage = new Stage(viewPort.width, viewPort.height, 0x0);
             mNativeOverlay = new Sprite();
             mNativeStage = stage;
             mNativeStage.addChild(mNativeOverlay);
@@ -365,8 +361,11 @@ package starling.core
                 mPreviousViewPort.height != mViewPort.height ||
                 mPreviousViewPort.x != mViewPort.x || mPreviousViewPort.y != mViewPort.y)
             {
-                mPreviousViewPort.setTo(mViewPort.x, mViewPort.y, mViewPort.width, mViewPort.height);
-                
+				mPreviousViewPort.x = mViewPort.x;
+				mPreviousViewPort.y = mViewPort.y;
+				mPreviousViewPort.width = mViewPort.width;
+				mPreviousViewPort.height = mViewPort.height;
+
                 // Constrained mode requires that the viewport is within the native stage bounds;
                 // thus, we use a clipped viewport when configuring the back buffer. (In baseline
                 // mode, that's not necessary, but it does not hurt either.)
@@ -502,23 +501,23 @@ package starling.core
                 if (event.type == MouseEvent.MOUSE_DOWN)    mLeftMouseDown = true;
                 else if (event.type == MouseEvent.MOUSE_UP) mLeftMouseDown = false;
             }
-            else
-            {
-                var touchEvent:TouchEvent = event as TouchEvent;
-                globalX = touchEvent.stageX;
-                globalY = touchEvent.stageY;
-                touchID = touchEvent.touchPointID;
-                pressure = touchEvent.pressure;
-                width = touchEvent.sizeX;
-                height = touchEvent.sizeY;
-            }
+//            else
+//            {
+//                var touchEvent:TouchEvent = event as TouchEvent;
+//                globalX = touchEvent.stageX;
+//                globalY = touchEvent.stageY;
+//                touchID = touchEvent.touchPointID;
+//                pressure = touchEvent.pressure;
+//                width = touchEvent.sizeX;
+//                height = touchEvent.sizeY;
+//            }
             
             // figure out touch phase
             switch (event.type)
             {
-                case TouchEvent.TOUCH_BEGIN: phase = TouchPhase.BEGAN; break;
-                case TouchEvent.TOUCH_MOVE:  phase = TouchPhase.MOVED; break;
-                case TouchEvent.TOUCH_END:   phase = TouchPhase.ENDED; break;
+//                case TouchEvent.TOUCH_BEGIN: phase = TouchPhase.BEGAN; break;
+//                case TouchEvent.TOUCH_MOVE:  phase = TouchPhase.MOVED; break;
+//                case TouchEvent.TOUCH_END:   phase = TouchPhase.ENDED; break;
                 case MouseEvent.MOUSE_DOWN:  phase = TouchPhase.BEGAN; break;
                 case MouseEvent.MOUSE_UP:    phase = TouchPhase.ENDED; break;
                 case MouseEvent.MOUSE_MOVE: 
@@ -535,9 +534,7 @@ package starling.core
         
         private function get touchEventTypes():Array
         {
-            return Mouse.supportsCursor || !multitouchEnabled ?
-                [ MouseEvent.MOUSE_DOWN,  MouseEvent.MOUSE_MOVE, MouseEvent.MOUSE_UP ] :
-                [ TouchEvent.TOUCH_BEGIN, TouchEvent.TOUCH_MOVE, TouchEvent.TOUCH_END ];  
+            return [ MouseEvent.MOUSE_DOWN,  MouseEvent.MOUSE_MOVE, MouseEvent.MOUSE_UP ];
         }
         
         // program management
@@ -726,16 +723,13 @@ package starling.core
         /** Indicates if multitouch input should be supported. */
         public static function get multitouchEnabled():Boolean 
         { 
-            return Multitouch.inputMode == MultitouchInputMode.TOUCH_POINT;
+            return false;
         }
         
         public static function set multitouchEnabled(value:Boolean):void
         {
             if (sCurrent) throw new IllegalOperationError(
                 "'multitouchEnabled' must be set before Starling instance is created");
-            else 
-                Multitouch.inputMode = value ? MultitouchInputMode.TOUCH_POINT :
-                                               MultitouchInputMode.NONE;
         }
         
         /** Indicates if Starling should automatically recover from a lost device context.

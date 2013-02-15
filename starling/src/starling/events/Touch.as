@@ -10,15 +10,16 @@
 
 package starling.events
 {
-    import flash.geom.Matrix;
-    import flash.geom.Point;
-    
-    import starling.core.starling_internal;
-    import starling.display.DisplayObject;
-    import starling.utils.MatrixUtil;
-    import starling.utils.formatString;
-    
-    use namespace starling_internal;
+
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+
+	import starling.core.starling_internal;
+	import starling.display.DisplayObject;
+	import starling.utils.MatrixUtil;
+	import starling.utils.formatString;
+
+	use namespace starling_internal;
 
     /** A Touch object contains information about the presence or movement of a finger 
      *  or the mouse on the screen.
@@ -101,7 +102,8 @@ package starling.events
             var x:Number = resultPoint.x;
             var y:Number = resultPoint.y;
             getPreviousLocation(space, resultPoint);
-            resultPoint.setTo(x - resultPoint.x, y - resultPoint.y);
+			resultPoint.x = x - resultPoint.x;
+			resultPoint.y = y - resultPoint.y;
             return resultPoint;
         }
         

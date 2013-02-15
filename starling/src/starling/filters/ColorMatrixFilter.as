@@ -13,13 +13,13 @@
 
 package starling.filters
 {
-    import flash.display3D.Context3D;
-    import flash.display3D.Context3DProgramType;
-    import flash.display3D.Program3D;
-    
-    import starling.textures.Texture;
-    
-    /** The ColorMatrixFilter class lets you apply a 4x5 matrix transformation on the RGBA color 
+
+	import flash.display3D.Context3D;
+	import flash.display3D.Program3D;
+
+	import starling.textures.Texture;
+
+	/** The ColorMatrixFilter class lets you apply a 4x5 matrix transformation on the RGBA color
      *  and alpha values of every pixel in the input image to produce a result with a new set 
      *  of RGBA color and alpha values. It allows saturation changes, hue rotation, 
      *  luminance to alpha, and various other effects.
@@ -70,7 +70,7 @@ package starling.filters
         /** @inheritDoc */
         public override function dispose():void
         {
-            if (mShaderProgram) mShaderProgram.dispose();
+//            if (mShaderProgram) mShaderProgram.dispose();
             super.dispose();
         }
         
@@ -96,9 +96,9 @@ package starling.filters
         /** @private */
         protected override function activate(pass:int, context:Context3D, texture:Texture):void
         {
-            context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, mShaderMatrix);
-            context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 5, MIN_COLOR);
-            context.setProgram(mShaderProgram);
+//            context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, mShaderMatrix);
+//            context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 5, MIN_COLOR);
+//            context.setProgram(mShaderProgram);
         }
         
         // color manipulation

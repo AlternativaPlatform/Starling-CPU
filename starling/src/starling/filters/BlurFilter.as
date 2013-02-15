@@ -10,14 +10,14 @@
 
 package starling.filters
 {
-    import flash.display3D.Context3D;
-    import flash.display3D.Context3DProgramType;
-    import flash.display3D.Program3D;
-    
-    import starling.textures.Texture;
-    import starling.utils.Color;
 
-    /** The BlurFilter applies a Gaussian blur to an object. The strength of the blur can be
+	import flash.display3D.Context3D;
+	import flash.display3D.Program3D;
+
+	import starling.textures.Texture;
+	import starling.utils.Color;
+
+	/** The BlurFilter applies a Gaussian blur to an object. The strength of the blur can be
      *  set for x- and y-axis separately (always relative to the stage).
      *  A blur filter can also be set up as a drop shadow or glow filter. Use the respective
      *  static methods to create such a filter.
@@ -88,8 +88,8 @@ package starling.filters
         /** @inheritDoc */
         public override function dispose():void
         {
-            if (mNormalProgram) mNormalProgram.dispose();
-            if (mTintedProgram) mTintedProgram.dispose();
+//            if (mNormalProgram) mNormalProgram.dispose();
+//            if (mTintedProgram) mTintedProgram.dispose();
             
             super.dispose();
         }
@@ -165,17 +165,17 @@ package starling.filters
             
             updateParameters(pass, texture.nativeWidth, texture.nativeHeight);
             
-            context.setProgramConstantsFromVector(Context3DProgramType.VERTEX,   4, mOffsets);
-            context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, mWeights);
+//            context.setProgramConstantsFromVector(Context3DProgramType.VERTEX,   4, mOffsets);
+//            context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, mWeights);
             
             if (mUniformColor && pass == numPasses - 1)
             {
-                context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, mColor);
-                context.setProgram(mTintedProgram);
+//                context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, mColor);
+//                context.setProgram(mTintedProgram);
             }
             else
             {
-                context.setProgram(mNormalProgram);
+//                context.setProgram(mNormalProgram);
             }
         }
         

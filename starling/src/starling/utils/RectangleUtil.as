@@ -10,11 +10,12 @@
 
 package starling.utils
 {
-    import flash.geom.Rectangle;
-    
-    import starling.errors.AbstractClassError;
 
-    /** A utility class containing methods related to the Rectangle class. */
+	import flash.geom.Rectangle;
+
+	import starling.errors.AbstractClassError;
+
+	/** A utility class containing methods related to the Rectangle class. */
     public class RectangleUtil
     {
         /** @private */
@@ -32,10 +33,14 @@ package starling.utils
             var top:Number    = Math.max(rect1.y, rect2.y);
             var bottom:Number = Math.min(rect1.y + rect1.height, rect2.y + rect2.height);
             
-            if (left > right || top > bottom)
+            if (left > right || top > bottom) {
                 resultRect.setEmpty();
-            else
-                resultRect.setTo(left, top, right-left, bottom-top);
+			} else {
+				resultRect.x = left;
+				resultRect.y = top;
+				resultRect.width = right - left;
+				resultRect.height = bottom - top;
+			}
             
             return resultRect;
         }
@@ -77,11 +82,11 @@ package starling.utils
             width  *= factor;
             height *= factor;
             
-            resultRect.setTo(
-                into.x + (into.width  - width)  / 2,
-                into.y + (into.height - height) / 2,
-                width, height);
-            
+			resultRect.x = into.x + (into.width  - width)  / 2;
+			resultRect.y = into.y + (into.height - height) / 2;
+			resultRect.width = width;
+			resultRect.height = height;
+
             return resultRect;
         }
         

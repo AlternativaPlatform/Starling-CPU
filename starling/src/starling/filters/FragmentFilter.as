@@ -10,36 +10,35 @@
 
 package starling.filters
 {
-    import flash.display3D.Context3D;
-    import flash.display3D.Context3DProgramType;
-    import flash.display3D.Context3DVertexBufferFormat;
-    import flash.display3D.IndexBuffer3D;
-    import flash.display3D.Program3D;
-    import flash.display3D.VertexBuffer3D;
-    import flash.errors.IllegalOperationError;
-    import flash.geom.Matrix;
-    import flash.geom.Rectangle;
-    import flash.system.Capabilities;
-    import flash.utils.getQualifiedClassName;
-    
-    import starling.core.RenderSupport;
-    import starling.core.Starling;
-    import starling.core.starling_internal;
-    import starling.display.BlendMode;
-    import starling.display.DisplayObject;
-    import starling.display.Image;
-    import starling.display.QuadBatch;
-    import starling.display.Stage;
-    import starling.errors.AbstractClassError;
-    import starling.errors.MissingContextError;
-    import starling.events.Event;
-    import starling.textures.Texture;
-    import starling.utils.MatrixUtil;
-    import starling.utils.RectangleUtil;
-    import starling.utils.VertexData;
-    import starling.utils.getNextPowerOfTwo;
 
-    /** The FragmentFilter class is the base class for all filter effects in Starling.
+	import flash.display3D.Context3D;
+	import flash.display3D.IndexBuffer3D;
+	import flash.display3D.Program3D;
+	import flash.display3D.VertexBuffer3D;
+	import flash.errors.IllegalOperationError;
+	import flash.geom.Matrix;
+	import flash.geom.Rectangle;
+	import flash.system.Capabilities;
+	import flash.utils.getQualifiedClassName;
+
+	import starling.core.RenderSupport;
+	import starling.core.Starling;
+	import starling.core.starling_internal;
+	import starling.display.BlendMode;
+	import starling.display.DisplayObject;
+	import starling.display.Image;
+	import starling.display.QuadBatch;
+	import starling.display.Stage;
+	import starling.errors.AbstractClassError;
+	import starling.errors.MissingContextError;
+	import starling.events.Event;
+	import starling.textures.Texture;
+	import starling.utils.MatrixUtil;
+	import starling.utils.RectangleUtil;
+	import starling.utils.VertexData;
+	import starling.utils.getNextPowerOfTwo;
+
+	/** The FragmentFilter class is the base class for all filter effects in Starling.
      *  All other filters of this package extend this class. You can attach them to any display
      *  object through the 'filter' property.
      * 
@@ -139,14 +138,14 @@ package starling.filters
             
             // Handle lost context. By using the conventional event, we can make it weak; this  
             // avoids memory leaks when people forget to call "dispose" on the filter.
-            Starling.current.stage3D.addEventListener(Event.CONTEXT3D_CREATE, 
-                onContextCreated, false, 0, true);
+            Starling.current.addEventListener(Event.CONTEXT3D_CREATE,
+                onContextCreated);
         }
         
         /** Disposes the filter (programs, buffers, textures). */
         public function dispose():void
         {
-            Starling.current.stage3D.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
+            Starling.current.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
             if (mVertexBuffer) mVertexBuffer.dispose();
             if (mIndexBuffer)  mIndexBuffer.dispose();
             disposePassTextures();
@@ -244,10 +243,10 @@ package starling.filters
             RenderSupport.setBlendFactors(PMA);
             support.loadIdentity();  // now we'll draw in stage coordinates!
             
-            context.setVertexBufferAt(mVertexPosAtID, mVertexBuffer, VertexData.POSITION_OFFSET, 
-                                      Context3DVertexBufferFormat.FLOAT_2);
-            context.setVertexBufferAt(mTexCoordsAtID, mVertexBuffer, VertexData.TEXCOORD_OFFSET,
-                                      Context3DVertexBufferFormat.FLOAT_2);
+//            context.setVertexBufferAt(mVertexPosAtID, mVertexBuffer, VertexData.POSITION_OFFSET,
+//                                      Context3DVertexBufferFormat.FLOAT_2);
+//            context.setVertexBufferAt(mTexCoordsAtID, mVertexBuffer, VertexData.TEXCOORD_OFFSET,
+//                                      Context3DVertexBufferFormat.FLOAT_2);
             
             // draw all passes
             for (var i:int=0; i<mNumPasses; ++i)
@@ -279,19 +278,19 @@ package starling.filters
                 
                 var passTexture:Texture = getPassTexture(i);
                 
-                context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, mMvpConstantID, 
-                                                      support.mvpMatrix3D, true);
-                context.setTextureAt(mBaseTextureID, passTexture.base);
+//                context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, mMvpConstantID,
+//                                                      support.mvpMatrix3D, true);
+//                context.setTextureAt(mBaseTextureID, passTexture.base);
                 
-                activate(i, context, passTexture);
-                context.drawTriangles(mIndexBuffer, 0, 2);
-                deactivate(i, context, passTexture);
+//                activate(i, context, passTexture);
+//                context.drawTriangles(mIndexBuffer, 0, 2);
+//                deactivate(i, context, passTexture);
             }
             
             // reset shader attributes
-            context.setVertexBufferAt(mVertexPosAtID, null);
-            context.setVertexBufferAt(mTexCoordsAtID, null);
-            context.setTextureAt(mBaseTextureID, null);
+//            context.setVertexBufferAt(mVertexPosAtID, null);
+//            context.setVertexBufferAt(mTexCoordsAtID, null);
+//            context.setTextureAt(mBaseTextureID, null);
             
             support.popMatrix();
             
@@ -329,9 +328,9 @@ package starling.filters
             
             if (mVertexBuffer == null)
             {
-                mVertexBuffer = context.createVertexBuffer(4, VertexData.ELEMENTS_PER_VERTEX);
-                mIndexBuffer  = context.createIndexBuffer(6);
-                mIndexBuffer.uploadFromVector(mIndexData, 0, 6);
+//                mVertexBuffer = context.createVertexBuffer(4, VertexData.ELEMENTS_PER_VERTEX);
+//                mIndexBuffer  = context.createIndexBuffer(6);
+//                mIndexBuffer.uploadFromVector(mIndexData, 0, 6);
             }
             
             mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, 4);

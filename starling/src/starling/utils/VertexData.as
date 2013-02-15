@@ -10,11 +10,12 @@
 
 package starling.utils
 {
-    import flash.geom.Matrix;
-    import flash.geom.Point;
-    import flash.geom.Rectangle;
-    
-    /** The VertexData class manages a raw list of vertex information, allowing direct upload
+
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+
+	/** The VertexData class manages a raw list of vertex information, allowing direct upload
      *  to Stage3D vertex buffers. <em>You only have to work with this class if you create display 
      *  objects with a custom render function. If you don't plan to do that, you can safely 
      *  ignore it.</em>
@@ -320,8 +321,11 @@ package starling.utils
                     maxY = maxY > sHelperPoint.y ? maxY : sHelperPoint.y;
                 }
             }
-            
-            resultRect.setTo(minX, minY, maxX - minX, maxY - minY);
+
+			resultRect.x = minX;
+			resultRect.y = minY;
+			resultRect.width = maxX - minX;
+			resultRect.height = maxY - minY;
             return resultRect;
         }
         
