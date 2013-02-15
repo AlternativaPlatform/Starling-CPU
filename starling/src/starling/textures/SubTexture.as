@@ -10,13 +10,14 @@
 
 package starling.textures
 {
-    import flash.display3D.textures.TextureBase;
-    import flash.geom.Point;
-    import flash.geom.Rectangle;
-    
-    import starling.utils.VertexData;
 
-    /** A SubTexture represents a section of another texture. This is achieved solely by 
+	import flash.display3D.textures.TextureBase;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+
+	import starling.utils.VertexData;
+
+	/** A SubTexture represents a section of another texture. This is achieved solely by
      *  manipulation of texture coordinates, making the class very efficient. 
      *
      *  <p><em>Note that it is OK to create subtextures of subtextures.</em></p>

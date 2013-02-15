@@ -10,10 +10,11 @@
 
 package starling.textures
 {
-    import flash.display3D.Context3DTextureFormat;
-    import flash.utils.ByteArray;
 
-    /** A parser for the ATF data format. */
+	import flash.display3D.Context3DTextureFormat;
+	import flash.utils.ByteArray;
+
+	/** A parser for the ATF data format. */
     internal class AtfData
     {
         private var mFormat:String;

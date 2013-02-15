@@ -3,7 +3,7 @@
   <component name="FlexBuildConfigurationManager" active="Starling">
     <configurations>
       <configuration name="Starling" pure-as="true" output-type="Library" output-file="Starling.swc" output-folder="$MODULE_DIR$/bin">
-        <dependencies target-player="11.4">
+        <dependencies target-player="10.0">
           <sdk name="flex_sdk_4.6" />
         </dependencies>
         <compiler-options />

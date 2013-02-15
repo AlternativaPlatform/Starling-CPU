@@ -285,7 +285,7 @@ package starling.textures
         }
 
         /** @private Uploads ATF data from a ByteArray to a native texture. */
-        internal static function uploadAtfData(nativeTexture:flash.display3D.textures.Texture, 
+        internal static function uploadAtfData(nativeTexture:flash.display3D.textures.Texture,
                                                data:ByteArray, offset:int=0, 
                                                async:Boolean=false):void
         {

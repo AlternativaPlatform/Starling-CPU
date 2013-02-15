@@ -10,11 +10,12 @@
 
 package starling.display
 {
-    import flash.display3D.Context3DBlendFactor;
-    
-    import starling.errors.AbstractClassError;
-    
-    /** A class that provides constant values for visual blend mode effects. 
+
+	import flash.display3D.Context3DBlendFactor;
+
+	import starling.errors.AbstractClassError;
+
+	/** A class that provides constant values for visual blend mode effects.
      *   
      *  <p>A blend mode is always defined by two 'Context3DBlendFactor' values. A blend factor 
      *  represents a particular four-value vector that is multiplied with the source or destination
