@@ -1,33 +1,33 @@
 package starling.utils
 {
-    import flash.display.Bitmap;
-    import flash.display.Loader;
-    import flash.events.Event;
-    import flash.events.IOErrorEvent;
-    import flash.events.ProgressEvent;
-    import flash.media.Sound;
-    import flash.media.SoundChannel;
-    import flash.media.SoundTransform;
-    import flash.net.FileReference;
-    import flash.net.URLLoader;
-    import flash.net.URLLoaderDataFormat;
-    import flash.net.URLRequest;
-    import flash.system.ImageDecodingPolicy;
-    import flash.system.LoaderContext;
-    import flash.utils.ByteArray;
-    import flash.utils.Dictionary;
-    import flash.utils.clearTimeout;
-    import flash.utils.describeType;
-    import flash.utils.getQualifiedClassName;
-    import flash.utils.setTimeout;
-    
-    import starling.core.Starling;
-    import starling.text.BitmapFont;
-    import starling.text.TextField;
-    import starling.textures.Texture;
-    import starling.textures.TextureAtlas;
-    
-    /** The AssetManager handles loading and accessing a variety of asset types. You can 
+
+	import flash.display.Bitmap;
+	import flash.display.Loader;
+	import flash.events.Event;
+	import flash.events.IOErrorEvent;
+	import flash.events.ProgressEvent;
+	import flash.media.Sound;
+	import flash.media.SoundChannel;
+	import flash.media.SoundTransform;
+	import flash.net.FileReference;
+	import flash.net.URLLoader;
+	import flash.net.URLLoaderDataFormat;
+	import flash.net.URLRequest;
+	import flash.system.LoaderContext;
+	import flash.utils.ByteArray;
+	import flash.utils.Dictionary;
+	import flash.utils.clearTimeout;
+	import flash.utils.describeType;
+	import flash.utils.getQualifiedClassName;
+	import flash.utils.setTimeout;
+
+	import starling.core.Starling;
+	import starling.text.BitmapFont;
+	import starling.text.TextField;
+	import starling.textures.Texture;
+	import starling.textures.TextureAtlas;
+
+	/** The AssetManager handles loading and accessing a variety of asset types. You can
      *  add assets directly (via the 'add...' methods) or asynchronously via a queue. This allows
      *  you to deal with assets in a unified way, no matter if they are loaded from a file, 
      *  directory, URL, or from an embedded object.
@@ -404,7 +404,7 @@ package starling.utils
             
             if (rawAsset is Class)
             {
-                var asset:Object = new rawAsset();
+                var asset:Object = new (Class(rawAsset))();
                 
                 if (asset is Sound)
                 {
@@ -483,15 +483,15 @@ package starling.utils
                         onComplete();
                         break;
                     case "mp3":
-                        sound = new Sound();
-                        sound.loadCompressedDataFromByteArray(bytes, bytes.length);
-                        addSound(name, sound);
+//                        sound = new Sound();
+//                        sound.loadCompressedDataFromByteArray(bytes, bytes.length);
+//                        addSound(name, sound);
                         onComplete();
                         break;
                     default:
                         var loaderContext:LoaderContext = new LoaderContext();
                         var loader:Loader = new Loader();
-                        loaderContext.imageDecodingPolicy = ImageDecodingPolicy.ON_LOAD;
+//                        loaderContext.imageDecodingPolicy = ImageDecodingPolicy.ON_LOAD;
                         loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoaderComplete);
                         loader.loadBytes(urlLoader.data as ByteArray, loaderContext);
                         break;

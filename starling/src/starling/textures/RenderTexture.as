@@ -10,19 +10,20 @@
 
 package starling.textures
 {
-    import flash.display3D.Context3D;
-    import flash.display3D.textures.TextureBase;
-    import flash.geom.Matrix;
-    import flash.geom.Rectangle;
-    
-    import starling.core.RenderSupport;
-    import starling.core.Starling;
-    import starling.display.DisplayObject;
-    import starling.display.Image;
-    import starling.errors.MissingContextError;
-    import starling.utils.getNextPowerOfTwo;
 
-    /** A RenderTexture is a dynamic texture onto which you can draw any display object.
+	import flash.display3D.Context3D;
+	import flash.display3D.textures.TextureBase;
+	import flash.geom.Matrix;
+	import flash.geom.Rectangle;
+
+	import starling.core.RenderSupport;
+	import starling.core.Starling;
+	import starling.display.DisplayObject;
+	import starling.display.Image;
+	import starling.errors.MissingContextError;
+	import starling.utils.getNextPowerOfTwo;
+
+	/** A RenderTexture is a dynamic texture onto which you can draw any display object.
      * 
      *  <p>After creating a render texture, just call the <code>drawObject</code> method to render 
      *  an object directly onto the texture. The object will be drawn onto the texture at its current
@@ -161,7 +162,10 @@ package starling.textures
             }
             
             // limit drawing to relevant area
-            sClipRect.setTo(0, 0, mActiveTexture.width, mActiveTexture.height);
+			sClipRect.x = 0;
+			sClipRect.y = 0;
+			sClipRect.width = mActiveTexture.width;
+			sClipRect.height = mActiveTexture.height;
 
             mSupport.pushClipRect(sClipRect);
             mSupport.renderTarget = mActiveTexture;

@@ -508,7 +508,7 @@ package starling.display
                     {
                         var childBlendMode:String = child.blendMode == BlendMode.AUTO ?
                                                     blendMode : child.blendMode;
-                        childMatrix.copyFrom(transformationMatrix);
+						MatrixUtil.copyFrom(childMatrix, transformationMatrix);
                         RenderSupport.transformMatrixForObject(childMatrix, child);
                         quadBatchID = compileObject(child, quadBatches, quadBatchID, childMatrix, 
                                                     alpha*objectAlpha, childBlendMode);

@@ -116,5 +116,13 @@ package starling.utils
             
             return 1.0 / divisor;
         }
+
+		public static function copyFrom(destination:Rectangle, source:Rectangle):void {
+			destination.x = source.x;
+			destination.y = source.y;
+			destination.width = source.width;
+			destination.height = source.height;
+		}
+
     }
 }

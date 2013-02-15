@@ -94,9 +94,13 @@ package starling.core
         /** Sets up the projection matrix for ortographic 2D rendering. */
         public function setOrthographicProjection(x:Number, y:Number, width:Number, height:Number):void
         {
-            mProjectionMatrix.setTo(2.0/width, 0, 0, -2.0/height, 
-                -(2*x + width) / width, (2*y + height) / height);
-            
+			mProjectionMatrix.a = 2.0/width;
+			mProjectionMatrix.b = 0;
+			mProjectionMatrix.c = 0;
+			mProjectionMatrix.d = -2.0/height;
+			mProjectionMatrix.tx = -(2*x + width) / width;
+			mProjectionMatrix.ty = (2*y + height) / height;
+
             applyClipRect();
         }
         
@@ -142,13 +146,13 @@ package starling.core
             if (mMatrixStack.length < mMatrixStackSize + 1)
                 mMatrixStack.push(new Matrix());
             
-            mMatrixStack[int(mMatrixStackSize++)].copyFrom(mModelViewMatrix);
+			MatrixUtil.copyFrom(mMatrixStack[int(mMatrixStackSize++)], mModelViewMatrix);
         }
         
         /** Restores the modelview matrix that was last pushed to the stack. */
         public function popMatrix():void
         {
-            mModelViewMatrix.copyFrom(mMatrixStack[int(--mMatrixStackSize)]);
+			MatrixUtil.copyFrom(mModelViewMatrix, mMatrixStack[int(--mMatrixStackSize)]);
         }
         
         /** Empties the matrix stack, resets the modelview matrix to the identity matrix. */
@@ -168,7 +172,7 @@ package starling.core
          *  CAUTION: Use with care! Each call returns the same instance. */
         public function get mvpMatrix():Matrix
         {
-			mMvpMatrix.copyFrom(mModelViewMatrix);
+			MatrixUtil.copyFrom(mMvpMatrix, mModelViewMatrix);
             mMvpMatrix.concat(mProjectionMatrix);
             return mMvpMatrix;
         }
@@ -189,7 +193,7 @@ package starling.core
         public function get projectionMatrix():Matrix { return mProjectionMatrix; }
         public function set projectionMatrix(value:Matrix):void 
         {
-            mProjectionMatrix.copyFrom(value);
+			MatrixUtil.copyFrom(mProjectionMatrix, value);
             applyClipRect();
         }
         
@@ -263,7 +267,7 @@ package starling.core
             if (mClipRectStack.length < mClipRectStackSize + 1)
                 mClipRectStack.push(new Rectangle());
             
-            mClipRectStack[mClipRectStackSize].copyFrom(rectangle);
+			RectangleUtil.copyFrom(mClipRectStack[mClipRectStackSize], rectangle);
             rectangle = mClipRectStack[mClipRectStackSize];
             
             // intersect with the last pushed clip rect
@@ -301,7 +305,10 @@ package starling.core
             if (mClipRectStackSize > 0)
             {
                 var rect:Rectangle = mClipRectStack[mClipRectStackSize-1];
-                sRectangle.setTo(rect.x, rect.y, rect.width, rect.height);
+				sRectangle.x = rect.x;
+				sRectangle.y = rect.y;
+				sRectangle.width = rect.width;
+				sRectangle.height = rect.height;
                 
                 var width:int  = mRenderTarget ? mRenderTarget.root.nativeWidth  : mBackBufferWidth;
                 var height:int = mRenderTarget ? mRenderTarget.root.nativeHeight : mBackBufferHeight;
@@ -317,8 +324,12 @@ package starling.core
                 
                 // an empty rectangle is not allowed, so we set it to the smallest possible size
                 // if the bounds are outside the visible area.
-                if (sRectangle.width < 1 || sRectangle.height < 1)
-                    sRectangle.setTo(0, 0, 1, 1);
+                if (sRectangle.width < 1 || sRectangle.height < 1) {
+					sRectangle.x = 0;
+					sRectangle.y = 0;
+					sRectangle.width = 1;
+					sRectangle.height = 1;
+				}
                 
 //                context.setScissorRectangle(sRectangle);
             }

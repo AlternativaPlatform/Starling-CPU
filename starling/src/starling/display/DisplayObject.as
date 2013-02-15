@@ -10,23 +10,24 @@
 
 package starling.display
 {
-    import flash.geom.Matrix;
-    import flash.geom.Point;
-    import flash.geom.Rectangle;
-    import flash.system.Capabilities;
-    import flash.ui.Mouse;
-    import flash.ui.MouseCursor;
-    import flash.utils.getQualifiedClassName;
-    
-    import starling.core.RenderSupport;
-    import starling.errors.AbstractClassError;
-    import starling.errors.AbstractMethodError;
-    import starling.events.EventDispatcher;
-    import starling.events.TouchEvent;
-    import starling.filters.FragmentFilter;
-    import starling.utils.MatrixUtil;
-    
-    /** Dispatched when an object is added to a parent. */
+
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	import flash.system.Capabilities;
+	import flash.ui.Mouse;
+	import flash.ui.MouseCursor;
+	import flash.utils.getQualifiedClassName;
+
+	import starling.core.RenderSupport;
+	import starling.errors.AbstractClassError;
+	import starling.errors.AbstractMethodError;
+	import starling.events.EventDispatcher;
+	import starling.events.TouchEvent;
+	import starling.filters.FragmentFilter;
+	import starling.utils.MatrixUtil;
+
+	/** Dispatched when an object is added to a parent. */
     [Event(name="added", type="starling.events.Event")]
     /** Dispatched when an object is connected to the stage (directly or indirectly). */
     [Event(name="addedToStage", type="starling.events.Event")]
@@ -185,7 +186,7 @@ package starling.display
             }
             else if (targetSpace == mParent || (targetSpace == null && mParent == null))
             {
-                resultMatrix.copyFrom(transformationMatrix);
+				MatrixUtil.copyFrom(resultMatrix, transformationMatrix);
                 return resultMatrix;
             }
             else if (targetSpace == null || targetSpace == base)
@@ -388,7 +389,7 @@ package starling.display
         public function set transformationMatrix(matrix:Matrix):void
         {
             mOrientationChanged = false;
-            mTransformationMatrix.copyFrom(matrix);
+			MatrixUtil.copyFrom(mTransformationMatrix, matrix);
 
             mX = matrix.tx;
             mY = matrix.ty;

@@ -12,9 +12,7 @@ package starling.filters
 {
 
 	import flash.display3D.Context3D;
-	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.Program3D;
-	import flash.display3D.VertexBuffer3D;
 	import flash.errors.IllegalOperationError;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
@@ -94,9 +92,9 @@ package starling.filters
         private var mOffsetY:Number;
         
         private var mVertexData:VertexData;
-        private var mVertexBuffer:VertexBuffer3D;
+//        private var mVertexBuffer:VertexBuffer3D;
         private var mIndexData:Vector.<uint>;
-        private var mIndexBuffer:IndexBuffer3D;
+//        private var mIndexBuffer:IndexBuffer3D;
         
         private var mCacheRequested:Boolean;
         private var mCache:QuadBatch;
@@ -146,16 +144,16 @@ package starling.filters
         public function dispose():void
         {
             Starling.current.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
-            if (mVertexBuffer) mVertexBuffer.dispose();
-            if (mIndexBuffer)  mIndexBuffer.dispose();
+//            if (mVertexBuffer) mVertexBuffer.dispose();
+//            if (mIndexBuffer)  mIndexBuffer.dispose();
             disposePassTextures();
             disposeCache();
         }
         
         private function onContextCreated(event:Object):void
         {
-            mVertexBuffer = null;
-            mIndexBuffer  = null;
+//            mVertexBuffer = null;
+//            mIndexBuffer  = null;
             mPassTextures = null;
             
             createPrograms();
@@ -219,7 +217,7 @@ package starling.filters
             support.pushMatrix();
             
             // save original projection matrix and render target
-            mProjMatrix.copyFrom(support.projectionMatrix); 
+//            mProjMatrix.copyFrom(support.projectionMatrix);
             var previousRenderTarget:Texture = support.renderTarget;
             
             if (previousRenderTarget)
@@ -298,7 +296,7 @@ package starling.filters
             {
                 // restore support settings
                 support.renderTarget = previousRenderTarget;
-                support.projectionMatrix.copyFrom(mProjMatrix);
+//                support.projectionMatrix.copyFrom(mProjMatrix);
                 
                 // Create an image containing the cache. To have a display object that contains
                 // the filter output in object coordinates, we wrap it in a QuadBatch: that way,
@@ -326,14 +324,14 @@ package starling.filters
             mVertexData.setPosition(2, bounds.x, bounds.bottom);
             mVertexData.setPosition(3, bounds.right, bounds.bottom);
             
-            if (mVertexBuffer == null)
-            {
+//            if (mVertexBuffer == null)
+//            {
 //                mVertexBuffer = context.createVertexBuffer(4, VertexData.ELEMENTS_PER_VERTEX);
 //                mIndexBuffer  = context.createIndexBuffer(6);
 //                mIndexBuffer.uploadFromVector(mIndexData, 0, 6);
-            }
+//            }
             
-            mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, 4);
+//            mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, 4);
         }
         
         private function updatePassTextures(width:int, height:int, scale:Number):void
@@ -374,14 +372,14 @@ package starling.filters
                                          intersectWithStage:Boolean, resultRect:Rectangle):void
         {
             // optimize for full-screen effects
-            if (object == stage || object == Starling.current.root)
-                resultRect.setTo(0, 0, stage.stageWidth, stage.stageHeight);
-            else
-                object.getBounds(stage, resultRect);
+//            if (object == stage || object == Starling.current.root)
+//                resultRect.setTo(0, 0, stage.stageWidth, stage.stageHeight);
+//            else
+//                object.getBounds(stage, resultRect);
             
             if (intersectWithStage)
             {
-                sStageBounds.setTo(0, 0, stage.stageWidth, stage.stageHeight);
+//                sStageBounds.setTo(0, 0, stage.stageWidth, stage.stageHeight);
                 RectangleUtil.intersect(resultRect, sStageBounds, resultRect);
             }
             

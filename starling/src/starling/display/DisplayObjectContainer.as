@@ -10,20 +10,21 @@
 
 package starling.display
 {
-    import flash.geom.Matrix;
-    import flash.geom.Point;
-    import flash.geom.Rectangle;
-    import flash.system.Capabilities;
-    import flash.utils.getQualifiedClassName;
-    
-    import starling.core.RenderSupport;
-    import starling.core.starling_internal;
-    import starling.errors.AbstractClassError;
-    import starling.events.Event;
-    import starling.filters.FragmentFilter;
-    import starling.utils.MatrixUtil;
-    
-    use namespace starling_internal;
+
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	import flash.system.Capabilities;
+	import flash.utils.getQualifiedClassName;
+
+	import starling.core.RenderSupport;
+	import starling.core.starling_internal;
+	import starling.errors.AbstractClassError;
+	import starling.events.Event;
+	import starling.filters.FragmentFilter;
+	import starling.utils.MatrixUtil;
+
+	use namespace starling_internal;
     
     /**
      *  A DisplayObjectContainer represents a collection of display objects.
@@ -265,8 +266,12 @@ package starling.display
             {
                 getTransformationMatrix(targetSpace, sHelperMatrix);
                 MatrixUtil.transformCoords(sHelperMatrix, 0.0, 0.0, sHelperPoint);
-                resultRect.setTo(sHelperPoint.x, sHelperPoint.y, 0, 0);
-            }
+				resultRect.x = sHelperPoint.x;
+				resultRect.y = sHelperPoint.y;
+				resultRect.width = 0;
+				resultRect.height = 0;
+
+			}
             else if (numChildren == 1)
             {
                 resultRect = mChildren[0].getBounds(targetSpace, resultRect);
@@ -285,8 +290,11 @@ package starling.display
                     maxY = maxY > resultRect.bottom ? maxY : resultRect.bottom;
                 }
                 
-                resultRect.setTo(minX, minY, maxX - minX, maxY - minY);
-            }                
+				resultRect.x = minX;
+				resultRect.y = minY;
+				resultRect.width = maxX - minX;
+				resultRect.height = maxY - minY;
+            }
             
             return resultRect;
         }

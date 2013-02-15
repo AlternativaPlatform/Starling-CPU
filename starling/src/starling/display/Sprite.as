@@ -10,16 +10,17 @@
 
 package starling.display
 {
-    import flash.geom.Matrix;
-    import flash.geom.Point;
-    import flash.geom.Rectangle;
-    
-    import starling.core.RenderSupport;
-    import starling.events.Event;
-    import starling.utils.MatrixUtil;
-    import starling.utils.RectangleUtil;
 
-    /** Dispatched on all children when the object is flattened. */
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+
+	import starling.core.RenderSupport;
+	import starling.events.Event;
+	import starling.utils.MatrixUtil;
+	import starling.utils.RectangleUtil;
+
+	/** Dispatched on all children when the object is flattened. */
     [Event(name="flatten", type="starling.events.Event")]
     
     /** A Sprite is the most lightweight, non-abstract container class.
@@ -116,7 +117,7 @@ package starling.display
         public function get clipRect():Rectangle { return mClipRect; }
         public function set clipRect(value:Rectangle):void 
         {
-            if (mClipRect && value) mClipRect.copyFrom(value);
+            if (mClipRect && value) RectangleUtil.copyFrom(mClipRect, value);
             else mClipRect = (value ? value.clone() : null);
         }
 
@@ -151,8 +152,12 @@ package starling.display
                 maxY = Math.max(maxY, transformedPoint.y);
             }
             
-            resultRect.setTo(minX, minY, maxX-minX, maxY-minY);
-            return resultRect;
+			resultRect.x = minX;
+			resultRect.y = minY;
+			resultRect.width = maxX - minX;
+			resultRect.height = maxY - minY;
+
+			return resultRect;
         }
         
         /** @inheritDoc */ 

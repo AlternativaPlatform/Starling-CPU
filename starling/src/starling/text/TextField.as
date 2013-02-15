@@ -10,29 +10,30 @@
 
 package starling.text
 {
-    import flash.display.BitmapData;
-    import flash.display.StageQuality;
-    import flash.geom.Matrix;
-    import flash.geom.Rectangle;
-    import flash.text.AntiAliasType;
-    import flash.text.TextField;
-    import flash.text.TextFormat;
-    import flash.utils.Dictionary;
-    
-    import starling.core.RenderSupport;
-    import starling.core.Starling;
-    import starling.display.DisplayObject;
-    import starling.display.DisplayObjectContainer;
-    import starling.display.Image;
-    import starling.display.Quad;
-    import starling.display.QuadBatch;
-    import starling.display.Sprite;
-    import starling.events.Event;
-    import starling.textures.Texture;
-    import starling.utils.HAlign;
-    import starling.utils.VAlign;
 
-    /** A TextField displays text, either using standard true type fonts or custom bitmap fonts.
+	import flash.display.BitmapData;
+	import flash.display.StageQuality;
+	import flash.geom.Matrix;
+	import flash.geom.Rectangle;
+	import flash.text.AntiAliasType;
+	import flash.text.TextField;
+	import flash.text.TextFormat;
+	import flash.utils.Dictionary;
+
+	import starling.core.RenderSupport;
+	import starling.core.Starling;
+	import starling.display.DisplayObject;
+	import starling.display.DisplayObjectContainer;
+	import starling.display.Image;
+	import starling.display.Quad;
+	import starling.display.QuadBatch;
+	import starling.display.Sprite;
+	import starling.events.Event;
+	import starling.textures.Texture;
+	import starling.utils.HAlign;
+	import starling.utils.VAlign;
+
+	/** A TextField displays text, either using standard true type fonts or custom bitmap fonts.
      *  
      *  <p>You can set all properties you are used to, like the font name and size, a color, the 
      *  horizontal and vertical alignment, etc. The border property is helpful during development, 
@@ -209,10 +210,13 @@ package starling.text
             
             // update textBounds rectangle
             if (mTextBounds == null) mTextBounds = new Rectangle();
-            mTextBounds.setTo(xOffset   / scale, yOffset    / scale,
-                              textWidth / scale, textHeight / scale);
-            
-            var texture:Texture = Texture.fromBitmapData(bitmapData, false, false, scale);
+			mTextBounds.x = xOffset   / scale;
+			mTextBounds.y = yOffset    / scale;
+			mTextBounds.width = textWidth / scale;
+			mTextBounds.height = textHeight / scale;
+
+
+			var texture:Texture = Texture.fromBitmapData(bitmapData, false, false, scale);
             
             if (mImage == null) 
             {

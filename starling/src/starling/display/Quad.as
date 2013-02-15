@@ -10,14 +10,15 @@
 
 package starling.display
 {
-    import flash.geom.Matrix;
-    import flash.geom.Point;
-    import flash.geom.Rectangle;
-    
-    import starling.core.RenderSupport;
-    import starling.utils.VertexData;
-    
-    /** A Quad represents a rectangle with a uniform color or a color gradient.
+
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+
+	import starling.core.RenderSupport;
+	import starling.utils.VertexData;
+
+	/** A Quad represents a rectangle with a uniform color or a color gradient.
      *  
      *  <p>You can set one color per vertex. The colors will smoothly fade into each other over the area
      *  of the quad. To display a simple linear color gradient, assign one color to vertices 0 and 1 and 
@@ -76,16 +77,22 @@ package starling.display
             if (targetSpace == this) // optimization
             {
                 mVertexData.getPosition(3, sHelperPoint);
-                resultRect.setTo(0.0, 0.0, sHelperPoint.x, sHelperPoint.y);
+				resultRect.x = 0;
+				resultRect.y = 0;
+				resultRect.width = sHelperPoint.x;
+				resultRect.height = sHelperPoint.y;
             }
             else if (targetSpace == parent && rotation == 0.0) // optimization
             {
                 var scaleX:Number = this.scaleX;
                 var scaleY:Number = this.scaleY;
                 mVertexData.getPosition(3, sHelperPoint);
-                resultRect.setTo(x - pivotX * scaleX,      y - pivotY * scaleY,
-                                 sHelperPoint.x * scaleX, sHelperPoint.y * scaleY);
-                if (scaleX < 0) { resultRect.width  *= -1; resultRect.x -= resultRect.width;  }
+				resultRect.x = x - pivotX * scaleX;
+				resultRect.y = y - pivotY * scaleY;
+				resultRect.width = sHelperPoint.x * scaleX;
+				resultRect.height = sHelperPoint.y * scaleY;
+
+				if (scaleX < 0) { resultRect.width  *= -1; resultRect.x -= resultRect.width;  }
                 if (scaleY < 0) { resultRect.height *= -1; resultRect.y -= resultRect.height; }
             }
             else
