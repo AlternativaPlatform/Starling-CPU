@@ -11,6 +11,8 @@
 package starling.core
 {
 
+	import flash.display.BlendMode;
+	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.display.Stage3D;
 	import flash.display.StageAlign;
@@ -334,10 +336,11 @@ package starling.core
             updateViewPort();
             updateNativeOverlay();
             mSupport.nextFrame();
+			mDrawCount = 0;
             
             var scaleX:Number = mViewPort.width  / mStage.stageWidth;
             var scaleY:Number = mViewPort.height / mStage.stageHeight;
-            
+
             mSupport.renderTarget = null; // back buffer
             mSupport.setOrthographicProjection(
                 mViewPort.x < 0 ? -mViewPort.x / scaleX : 0.0, 
@@ -347,12 +350,35 @@ package starling.core
             
             mStage.render(mSupport, 1.0);
             mSupport.finishQuadBatch();
+			finishDraws();
             
             if (mStatsDisplay)
                 mStatsDisplay.drawCount = mSupport.drawCount;
         }
-        
-        private function updateViewPort(updateAliasing:Boolean=false):void
+
+		private var mDrawCount:int = 0;
+
+		public function nextDraw(alpha:Number = 1.0, blendMode:String = null):Shape {
+			var current:Shape = mDrawCount < mNativeOverlay.numChildren ? Shape(mNativeOverlay.getChildAt(mDrawCount)) : null;
+			if (current == null) {
+				current = DrawShape.create(alpha, blendMode);
+				mNativeOverlay.addChild(current);
+			} else {
+				current.graphics.clear();
+				current.alpha = alpha;
+				if (blendMode != null) current.blendMode = blendMode; else current.blendMode = BlendMode.NORMAL;
+			}
+			mDrawCount++;
+			return current;
+		}
+
+		public function finishDraws():void {
+			for (var i:int = mNativeOverlay.numChildren - 1; i >= mDrawCount; i--) {
+				DrawShape.destroy(DrawShape(mNativeOverlay.removeChildAt(i)));
+			}
+		}
+
+		private function updateViewPort(updateAliasing:Boolean=false):void
         {
             // the last set viewport is stored in a variable; that way, people can modify the
             // viewPort directly (without a copy) and we still know if it has changed.
@@ -741,4 +767,37 @@ package starling.core
         public static function get handleLostContext():Boolean { return true; }
         public static function set handleLostContext(value:Boolean):void { }
     }
+}
+
+import flash.display.Shape;
+
+import starling.display.BlendMode;
+
+class DrawShape extends Shape {
+
+	private static var collector:DrawShape;
+
+	public static function create(alpha:Number = 1, blendMode:String = null):Shape {
+		var current:DrawShape = collector;
+		if (current == null) {
+			current = new DrawShape();
+			if (alpha != 1) current.alpha = alpha;
+			if (blendMode != null && blendMode != BlendMode.NORMAL) current.blendMode = blendMode;
+		} else {
+			current.alpha = alpha;
+			if (blendMode != null) current.blendMode = blendMode;
+			else current.blendMode = flash.display.BlendMode.NORMAL;
+			current.graphics.clear();
+			collector = collector.next;
+		}
+		return current;
+	}
+
+	public static function destroy(element:DrawShape):void {
+		element.next = collector;
+		collector = element;
+	}
+
+	public var next:DrawShape;
+
 }

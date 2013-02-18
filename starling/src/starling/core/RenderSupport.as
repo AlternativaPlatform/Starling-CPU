@@ -103,7 +103,7 @@ package starling.core
 
             applyClipRect();
         }
-        
+
         /** Changes the modelview matrix to the identity matrix. */
         public function loadIdentity():void
         {
@@ -346,7 +346,7 @@ package starling.core
         public function batchQuad(quad:Quad, parentAlpha:Number, 
                                   texture:Texture=null, smoothing:String=null):void
         {
-            if (mQuadBatches[mCurrentQuadBatchID].isStateChange(quad.tinted, parentAlpha, texture, 
+            if (mQuadBatches[mCurrentQuadBatchID].isStateChange(quad.alpha*parentAlpha, texture,
                                                                 smoothing, mBlendMode))
             {
                 finishQuadBatch();
@@ -413,7 +413,7 @@ package starling.core
         {
             RenderSupport.clear(rgb, alpha);
         }
-        
+
         /** Assembles fragment- and vertex-shaders, passed as Strings, to a Program3D. If you
          *  pass a 'resultProgram', it will be uploaded to that program; otherwise, a new program
          *  will be created on the current Stage3D context. */ 
