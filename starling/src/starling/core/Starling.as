@@ -11,8 +11,6 @@
 package starling.core
 {
 
-	import flash.display.BlendMode;
-	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.display.Stage3D;
 	import flash.display.StageAlign;
@@ -179,7 +177,7 @@ package starling.core
         private var mClippedViewPort:Rectangle;
         
         private var mNativeStage:flash.display.Stage;
-        private var mNativeOverlay:Sprite;
+        public var mNativeOverlay:NativeOverlay;
         
         private static var sCurrent:Starling;
 //        private static var sHandleLostContext:Boolean;
@@ -215,7 +213,7 @@ package starling.core
             mPreviousViewPort = new Rectangle();
 			// color unused
             mStage = new Stage(viewPort.width, viewPort.height, 0x0);
-            mNativeOverlay = new Sprite();
+            mNativeOverlay = new NativeOverlay();
             mNativeStage = stage;
             mNativeStage.addChild(mNativeOverlay);
             mTouchProcessor = new TouchProcessor(mStage);
@@ -336,7 +334,7 @@ package starling.core
             updateViewPort();
             updateNativeOverlay();
             mSupport.nextFrame();
-			mDrawCount = 0;
+			mNativeOverlay.resetDraws();
             
             var scaleX:Number = mViewPort.width  / mStage.stageWidth;
             var scaleY:Number = mViewPort.height / mStage.stageHeight;
@@ -350,33 +348,11 @@ package starling.core
             
             mStage.render(mSupport, 1.0);
             mSupport.finishQuadBatch();
-			finishDraws();
+			mNativeOverlay.finishDraws();
             
             if (mStatsDisplay)
                 mStatsDisplay.drawCount = mSupport.drawCount;
         }
-
-		private var mDrawCount:int = 0;
-
-		public function nextDraw(alpha:Number = 1.0, blendMode:String = null):Shape {
-			var current:Shape = mDrawCount < mNativeOverlay.numChildren ? Shape(mNativeOverlay.getChildAt(mDrawCount)) : null;
-			if (current == null) {
-				current = DrawShape.create(alpha, blendMode);
-				mNativeOverlay.addChild(current);
-			} else {
-				current.graphics.clear();
-				current.alpha = alpha;
-				if (blendMode != null) current.blendMode = blendMode; else current.blendMode = BlendMode.NORMAL;
-			}
-			mDrawCount++;
-			return current;
-		}
-
-		public function finishDraws():void {
-			for (var i:int = mNativeOverlay.numChildren - 1; i >= mDrawCount; i--) {
-				DrawShape.destroy(DrawShape(mNativeOverlay.removeChildAt(i)));
-			}
-		}
 
 		private function updateViewPort(updateAliasing:Boolean=false):void
         {
@@ -411,13 +387,13 @@ package starling.core
 //                    mStage3D.x = mClippedViewPort.x;
 //                    mStage3D.y = mClippedViewPort.y;
 //
-//                    mSupport.configureBackBuffer(
-//                        mClippedViewPort.width, mClippedViewPort.height, mAntiAliasing, false);
+                    mSupport.configureBackBuffer(
+                        mClippedViewPort.width, mClippedViewPort.height, mAntiAliasing, false);
 //                }
 //                else
 //                {
-                    mSupport.backBufferWidth  = mClippedViewPort.width;
-                    mSupport.backBufferHeight = mClippedViewPort.height;
+//                    mSupport.backBufferWidth  = mClippedViewPort.width;
+//                    mSupport.backBufferHeight = mClippedViewPort.height;
 //                }
             }
         }
@@ -428,7 +404,6 @@ package starling.core
             mNativeOverlay.y = mViewPort.y;
             mNativeOverlay.scaleX = mViewPort.width / mStage.stageWidth;
             mNativeOverlay.scaleY = mViewPort.height / mStage.stageHeight;
-			mNativeOverlay.graphics.clear();
         }
         
         private function showFatalError(message:String):void
@@ -656,7 +631,7 @@ package starling.core
         /** A Flash Sprite placed directly on top of the Starling content. Use it to display native
          *  Flash components. */ 
         public function get nativeOverlay():Sprite { return mNativeOverlay; }
-        
+
         /** Indicates if a small statistics box (with FPS, memory usage and draw count) is displayed. */
         public function get showStats():Boolean { return mStatsDisplay && mStatsDisplay.parent; }
         public function set showStats(value:Boolean):void
@@ -767,37 +742,4 @@ package starling.core
         public static function get handleLostContext():Boolean { return true; }
         public static function set handleLostContext(value:Boolean):void { }
     }
-}
-
-import flash.display.Shape;
-
-import starling.display.BlendMode;
-
-class DrawShape extends Shape {
-
-	private static var collector:DrawShape;
-
-	public static function create(alpha:Number = 1, blendMode:String = null):Shape {
-		var current:DrawShape = collector;
-		if (current == null) {
-			current = new DrawShape();
-			if (alpha != 1) current.alpha = alpha;
-			if (blendMode != null && blendMode != BlendMode.NORMAL) current.blendMode = blendMode;
-		} else {
-			current.alpha = alpha;
-			if (blendMode != null) current.blendMode = blendMode;
-			else current.blendMode = flash.display.BlendMode.NORMAL;
-			current.graphics.clear();
-			collector = collector.next;
-		}
-		return current;
-	}
-
-	public static function destroy(element:DrawShape):void {
-		element.next = collector;
-		collector = element;
-	}
-
-	public var next:DrawShape;
-
 }

@@ -41,14 +41,14 @@ package starling.core
         private var mMvpMatrix3D:Matrix3D;
         private var mMatrixStack:Vector.<Matrix>;
         private var mMatrixStackSize:int;
-        
+
         private var mDrawCount:int;
         private var mBlendMode:String;
 
         private var mRenderTarget:Texture;
         private var mBackBufferWidth:int;
         private var mBackBufferHeight:int;
-        
+
         private var mClipRectStack:Vector.<Rectangle>;
         private var mClipRectStackSize:int;
         
@@ -394,7 +394,7 @@ package starling.core
         /** Sets up the blending factors that correspond with a certain blend mode. */
         public static function setBlendFactors(premultipliedAlpha:Boolean, blendMode:String="normal"):void
         {
-            var blendFactors:Array = BlendMode.getBlendFactors(blendMode, premultipliedAlpha); 
+//            var blendFactors:Array = BlendMode.getBlendFactors(blendMode, premultipliedAlpha);
 //            Starling.context.setBlendFactors(blendFactors[0], blendFactors[1]);
         }
         
@@ -420,17 +420,6 @@ package starling.core
         public static function assembleAgal(vertexShader:String, fragmentShader:String,
                                             resultProgram:Program3D=null):Program3D
         {
-//            if (resultProgram == null)
-//            {
-//                var context:Context3D = Starling.context;
-//                if (context == null) throw new MissingContextError();
-//                resultProgram = context.createProgram();
-//            }
-            
-//            resultProgram.upload(
-//                sAssembler.assemble(Context3DProgramType.VERTEX, vertexShader),
-//                sAssembler.assemble(Context3DProgramType.FRAGMENT, fragmentShader));
-            
             return resultProgram;
         }
         

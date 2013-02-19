@@ -234,7 +234,7 @@ package starling.display
 
 //			var canvas:Graphics = Starling.current.nativeOverlay.graphics;
 			if (blendMode == null) blendMode = this.blendMode;
-			var canvas:Graphics = (blendMode == BlendMode.NONE) ? Starling.current.nextDraw(1).graphics : Starling.current.nextDraw(mAlpha*parentAlpha, blendMode).graphics;
+			var canvas:Graphics = (blendMode == BlendMode.NONE) ? Starling.current.mNativeOverlay.nextDraw(1).graphics : Starling.current.mNativeOverlay.nextDraw(mAlpha*parentAlpha, blendMode).graphics;
 			if (mTexture) {
 				drawTriangles(canvas, mTexture.root.bitmapData, verticesData, indicesData, uvsData);
 //				canvas.beginBitmapFill(mTexture.root.bitmapData, null, false, true);
