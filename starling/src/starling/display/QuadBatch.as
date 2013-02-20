@@ -14,15 +14,12 @@ package starling.display
 	import flash.display.BitmapData;
 	import flash.display.Graphics;
 	import flash.geom.Matrix;
-	import flash.geom.Matrix3D;
 	import flash.geom.Rectangle;
-	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
 
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
 	import starling.core.starling_internal;
-	import starling.events.Event;
 	import starling.filters.FragmentFilter;
 	import starling.filters.FragmentFilterMode;
 	import starling.textures.Texture;
@@ -64,47 +61,30 @@ package starling.display
         private var mNumQuads:int;
         private var mSyncRequired:Boolean;
 
-//        private var mTinted:Boolean;
 		private var mAlpha:Number;
         private var mTexture:Texture;
         private var mSmoothing:String;
         
         private var mVertexData:VertexData;
-//        private var mVertexBuffer:VertexBuffer3D;
         private var mIndexData:Vector.<uint>;
-//        private var mIndexBuffer:IndexBuffer3D;
 
-		private var indicesData:Vector.<int> = new Vector.<int>();
-		private var verticesData:Vector.<Number> = new Vector.<Number>();
-		private var uvsData:Vector.<Number> = new Vector.<Number>();
+		private var calculatedIndexData:Vector.<int> = new Vector.<int>();
+		private var calculatedVertexData:Vector.<Number> = new Vector.<Number>();
+		private var calculatedUVsData:Vector.<Number> = new Vector.<Number>();
 
         /** Helper objects. */
         private static var sHelperMatrix:Matrix = new Matrix();
-        private static var sRenderAlpha:Vector.<Number> = new <Number>[1.0, 1.0, 1.0, 1.0];
-        private static var sRenderMatrix:Matrix3D = new Matrix3D();
-        private static var sProgramNameCache:Dictionary = new Dictionary();
-        
+
         /** Creates a new QuadBatch instance with empty batch data. */
         public function QuadBatch()
         {
             mVertexData = new VertexData(0, true);
-            mIndexData = new <uint>[];
+            mIndexData = new Vector.<uint>();
             mNumQuads = 0;
-//            mTinted = false;
 			mAlpha = 1;
             mSyncRequired = false;
-            
-            // Handle lost context. We use the conventional event here (not the one from Starling)
-            // so we're able to create a weak event listener; this avoids memory leaks when people 
-            // forget to call "dispose" on the QuadBatch.
-            Starling.current.addEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
         }
-        
-        private function onContextCreated(event:Object):void
-        {
-            uploadData();
-        }
-        
+
         /** Creates a duplicate of the QuadBatch object. */
         public function clone():QuadBatch
         {
@@ -153,44 +133,225 @@ package starling.display
         }
 
 		private function uploadData():void {
-			var i:int;
-			var numVerts:int = numQuads*4;
-			uvsData.length = numVerts << 1;
-			for (i = 0; i < numVerts; i++) {
-				var src:int = i << 3;
-				var dst:int = i << 1;
-				uvsData[dst] = mVertexData.rawData[int(src + 6)];
-				uvsData[int(dst + 1)] = mVertexData.rawData[int(src + 7)];
-			}
-			indicesData.length = numQuads*6;
-			for (i = 0; i < indicesData.length; i++) {
-				indicesData[i] = mIndexData[i];
-			}
 		}
 
-		private function updateVertices(matrix:Matrix):void {
-			var halfW:Number = Starling.current.renderSupport.backBufferWidth/2;
-			var halfH:Number = Starling.current.renderSupport.backBufferHeight/2;
+		private function calculateTriangles(projection:Matrix, backWidth:int, backHeight:int, clipRect:Rectangle = null):void {
+			var halfW:Number = backWidth*0.5;
+			var halfH:Number = backHeight*0.5;
 
-			var a:Number = matrix.a * halfW;
-			var b:Number = -matrix.b * halfH;
-			var c:Number = matrix.c * halfW;
-			var d:Number = -matrix.d * halfH;
-			var tx:Number = matrix.tx * halfW + halfW;
-			var ty:Number = - matrix.ty * halfH + halfH;
+			var a:Number = projection.a * halfW;
+			var b:Number = -projection.b * halfH;
+			var c:Number = projection.c * halfW;
+			var d:Number = -projection.d * halfH;
+			var tx:Number = projection.tx * halfW + halfW;
+			var ty:Number = - projection.ty * halfH + halfH;
+
+			var identity:Boolean = (a == 1) && (d == 1) && (projection.b == 0) && (projection.c == 0) && (projection.tx = -1) && (projection.ty == 1);
+
+//			trace(a, d, b, c, tx, ty, identity);
 
 			var i:int;
 			var numVerts:int = numQuads*4;
 			var srcVertices:Vector.<Number> = mVertexData.rawData;
-			verticesData.length = numVerts << 1;
+			calculatedVertexData.length = numVerts << 1;
+			calculatedUVsData.length = numVerts << 1;
+			var minX:Number = Number.MAX_VALUE, minY:Number = Number.MAX_VALUE, maxX:Number = -Number.MAX_VALUE, maxY:Number = -Number.MAX_VALUE;
 			for (i = 0; i < numVerts; i++) {
 				var src:int = i << 3;
 				var dst:int = i << 1;
 				var x:Number = srcVertices[src];
 				var y:Number = srcVertices[int(src + 1)];
-				verticesData[dst]          = a * x + c * y + tx;
-				verticesData[int(dst + 1)] = b * x + d * y + ty;
+				var dX:Number = x;
+				var dY:Number = y;
+				if (!identity) {
+					dX = a * x + c * y + tx;
+					dY = b * x + d * y + ty;
+				}
+				if (dX < minX) minX = dX;
+				if (dX > maxX) maxX = dX;
+				if (dY < minY) minY = dY;
+				if (dY > maxY) maxY = dY;
+
+				calculatedVertexData[dst]          = dX;
+				calculatedVertexData[int(dst + 1)] = dY;
+				calculatedUVsData[dst] = srcVertices[int(src + 6)];
+				calculatedUVsData[int(dst + 1)] = srcVertices[int(src + 7)];
 			}
+			var numIndices:int = numQuads*6;
+			if (clipRect != null) {
+				clipIndices(clipRect, minX, maxX, minY, maxY);
+			} else {
+				calculatedIndexData.length = numIndices;
+				for (i = 0; i < numIndices; i++) {
+					calculatedIndexData[i] = mIndexData[i];
+				}
+			}
+		}
+
+		private var points1:Vector.<int> = new Vector.<int>();
+		private var points2:Vector.<int> = new Vector.<int>();
+
+		private function clipIndices(rect:Rectangle, minX:Number, maxX:Number, minY:Number, maxY:Number):void {
+			var numIndices:int = numQuads*6;
+			calculatedIndexData.length = 0;
+
+			var left:Number = rect.x;
+			var top:Number = rect.y;
+			var right:Number = left + rect.width;
+			var bottom:Number = top + rect.height;
+
+			if (maxX <= left || maxY <= top || minX >= right || minY >= bottom) return;
+
+			for (var i:int = 0; i < numIndices; i += 3) {
+//			for (var i:int = 0; i < 3; i += 3) {
+				var a:int = mIndexData[i];
+				var b:int = mIndexData[int(i + 1)];
+				var c:int = mIndexData[int(i + 2)];
+				points1[0] = a;
+				points1[1] = b;
+				points1[2] = c;
+				points1.length = 3;
+
+				var valid:Boolean = true;
+				valid &&= clipTriangleX(points2, points1, left, 1);
+				valid &&= clipTriangleX(points1, points2, right, -1);
+				valid &&= clipTriangleY(points2, points1, top, 1);
+				valid &&= clipTriangleY(points1, points2, bottom, -1);
+				if (valid) {
+					triangulate(points1);
+//					triangulate(points2);
+				}
+			}
+		}
+
+		private function triangulate(points:Vector.<int>):void {
+			var a:int, b:int, c:int;
+			a = points[0];
+			b = points[1];
+			for (var j:int = 2; j < points.length; j++) {
+				c = points[j];
+				calculatedIndexData.push(a, b, c);
+				b = c;
+			}
+		}
+
+		private function clipTriangleX(destination:Vector.<int>, source:Vector.<int>, plane:Number, direction:int):Boolean {
+			destination.length = 0;
+			var newNumVerts:int = 0;
+
+			var i:int;
+			var t:Number;
+			var a:int, b:int;
+			var offset1:Number;
+			var offset2:Number;
+			var ax:Number, ay:Number, bx:Number, by:Number;
+			var au:Number, av:Number, bu:Number, bv:Number;
+
+			var numVerts:int = source.length;
+			a = source[int(numVerts - 1)] << 1;
+			ax = calculatedVertexData[a];
+			ay = calculatedVertexData[int(a + 1)];
+			au = calculatedUVsData[a];
+			av = calculatedUVsData[int(a + 1)];
+
+			var result:Boolean = false;
+			for (i = 0; i < numVerts; i++) {
+				b = source[i] << 1;
+				bx = calculatedVertexData[b];
+				by = calculatedVertexData[int(b + 1)];
+				bu = calculatedUVsData[b];
+				bv = calculatedUVsData[int(b + 1)];
+
+				offset1 = direction*(ax - plane);
+				offset2 = direction*(bx - plane);
+				if (offset2 >= 0) {
+					if (offset1 < 0) {
+						t = direction*offset1/(ax - bx);
+						destination[newNumVerts] = (addVertex(plane, ay + t * (by - ay), au + t * (bu - au), av + t * (bv - av)) >> 1);
+						newNumVerts++;
+					}
+					destination[newNumVerts] = b >> 1;
+					newNumVerts++;
+					result = true;
+				} else {
+					if (offset1 > 0) {
+						t = direction*offset2/(bx - ax);
+						destination[newNumVerts] = addVertex(plane, by + t * (ay - by), bu + t * (au - bu), bv + t*(av - bv)) >> 1;
+						newNumVerts++;
+						result = true;
+					}
+				}
+				a = b;
+				ax = bx;
+				ay = by;
+				au = bu;
+				av = bv;
+			}
+			return result;
+		}
+
+		private function clipTriangleY(destination:Vector.<int>, source:Vector.<int>, plane:Number, direction:int):Boolean {
+			destination.length = 0;
+			var newNumVerts:int = 0;
+
+			var i:int;
+			var t:Number;
+			var a:int, b:int;
+			var offset1:Number;
+			var offset2:Number;
+			var ax:Number, ay:Number, bx:Number, by:Number;
+			var au:Number, av:Number, bu:Number, bv:Number;
+
+			var numVerts:int = source.length;
+			a = source[int(numVerts - 1)] << 1;
+			ax = calculatedVertexData[a];
+			ay = calculatedVertexData[int(a + 1)];
+			au = calculatedUVsData[a];
+			av = calculatedUVsData[int(a + 1)];
+
+			var result:Boolean = false;
+			for (i = 0; i < numVerts; i++) {
+				b = source[i] << 1;
+				bx = calculatedVertexData[b];
+				by = calculatedVertexData[int(b + 1)];
+				bu = calculatedUVsData[b];
+				bv = calculatedUVsData[int(b + 1)];
+
+				offset1 = direction*(ay - plane);
+				offset2 = direction*(by - plane);
+				if (offset2 >= 0) {
+					if (offset1 < 0) {
+						t = direction*offset1/(ay - by);
+						destination[newNumVerts] = addVertex(ax + t * (bx - ax), plane, au + t * (bu - au), av + t * (bv - av)) >> 1;
+						newNumVerts++;
+					}
+					result = true;
+					destination[newNumVerts] = b >> 1;
+					newNumVerts++;
+				} else {
+					if (offset1 > 0) {
+						t = direction*offset2/(by - ay);
+						destination[newNumVerts] = addVertex(bx + t * (ax - bx), plane, bu + t * (au - bu), bv + t*(av - bv)) >> 1;
+						newNumVerts++;
+						result = true;
+					}
+				}
+				a = b;
+				ax = bx;
+				ay = by;
+				au = bu;
+				av = bv;
+			}
+			return result;
+		}
+
+		private function addVertex(x:Number, y:Number, u:Number, v:Number):int {
+			var index:int = calculatedVertexData.length;
+			calculatedVertexData[index] = x;
+			calculatedVertexData[int(index + 1)] = y;
+			calculatedUVsData[index] = u;
+			calculatedUVsData[int(index + 1)] = v;
+			return index;
 		}
 
         /** Renders the current batch with custom settings for model-view-projection matrix, alpha
@@ -203,57 +364,18 @@ package starling.display
             if (mNumQuads == 0) return;
             if (mSyncRequired) syncBuffers();
 
-//            var pma:Boolean = mVertexData.premultipliedAlpha;
-//            var context:Context3D = Starling.context;
-//            var tinted:Boolean = mTinted || (parentAlpha != 1.0);
+			calculateTriangles(mvpMatrix, Starling.current.renderSupport.backBufferWidth, Starling.current.renderSupport.backBufferHeight, Starling.current.mNativeOverlay.clipRectangle);
 
-//            sRenderAlpha[0] = sRenderAlpha[1] = sRenderAlpha[2] = pma ? parentAlpha : 1.0;
-//            sRenderAlpha[3] = parentAlpha;
-            
-//            MatrixUtil.convertTo3D(mvpMatrix, sRenderMatrix);
-			updateVertices(mvpMatrix);
-
-//			RenderSupport.setBlendFactors(pma, blendMode ? blendMode : this.blendMode);
-            
-//            context.setProgram(Starling.current.getProgram(programName));
-//            context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 0, sRenderAlpha, 1);
-//            context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 1, sRenderMatrix, true);
-//            context.setVertexBufferAt(0, mVertexBuffer, VertexData.POSITION_OFFSET,
-//                                      Context3DVertexBufferFormat.FLOAT_2);
-            
-//            if (mTexture == null || tinted)
-//                context.setVertexBufferAt(1, mVertexBuffer, VertexData.COLOR_OFFSET,
-//                                          Context3DVertexBufferFormat.FLOAT_4);
-            
-//            if (mTexture)
-//            {
-//                context.setTextureAt(0, mTexture.base);
-//                context.setVertexBufferAt(2, mVertexBuffer, VertexData.TEXCOORD_OFFSET,
-//                                          Context3DVertexBufferFormat.FLOAT_2);
-//            }
-
-//			var canvas:Graphics = Starling.current.nativeOverlay.graphics;
 			if (blendMode == null) blendMode = this.blendMode;
 			var canvas:Graphics = (blendMode == BlendMode.NONE) ? Starling.current.mNativeOverlay.nextDraw(1).graphics : Starling.current.mNativeOverlay.nextDraw(mAlpha*parentAlpha, blendMode).graphics;
 			if (mTexture) {
-				drawTriangles(canvas, mTexture.root.bitmapData, verticesData, indicesData, uvsData);
-//				canvas.beginBitmapFill(mTexture.root.bitmapData, null, false, true);
-//				canvas.drawTriangles(verticesData, indicesData, uvsData);
+//				drawTriangles(canvas, mTexture.root.bitmapData, calculatedVertexData, calculatedIndexData, calculatedUVsData);
+				canvas.beginBitmapFill(mTexture.root.bitmapData, null, false, true);
+				canvas.drawTriangles(calculatedVertexData, calculatedIndexData, calculatedUVsData);
 			} else {
 //				canvas.beginFill(0xFF9D00, 0.5);
-//				canvas.drawTriangles(verticesData, indicesData);
+//				canvas.drawTriangles(calculatedVertexData, calculatedIndexData);
 			}
-
-//            context.drawTriangles(mIndexBuffer, 0, mNumQuads * 2);
-            
-            if (mTexture)
-            {
-//                context.setTextureAt(0, null);
-//                context.setVertexBufferAt(2, null);
-            }
-            
-//            context.setVertexBufferAt(1, null);
-//            context.setVertexBufferAt(0, null);
         }
 
 		private static const drawMatrix:Matrix = new Matrix();
@@ -304,6 +426,7 @@ package starling.display
 //					drawMatrix.d /= bitmap.height;
 
 					graphics.beginBitmapFill(bitmap, drawMatrix, false, true);
+//					graphics.beginFill(0xFF00, 0.5);
 					graphics.moveTo(ax, ay);
 					graphics.lineTo(bx, by);
 					graphics.lineTo(cx, cy);

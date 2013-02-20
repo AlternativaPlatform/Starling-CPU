@@ -299,9 +299,6 @@ package starling.core
         {
             finishQuadBatch();
             
-//            var context:Context3D = Starling.context;
-//            if (context == null) return;
-            
             if (mClipRectStackSize > 0)
             {
                 var rect:Rectangle = mClipRectStack[mClipRectStackSize-1];
@@ -330,12 +327,12 @@ package starling.core
 					sRectangle.width = 1;
 					sRectangle.height = 1;
 				}
-                
-//                context.setScissorRectangle(sRectangle);
+
+				Starling.current.mNativeOverlay.clipRectangle = sRectangle;
             }
             else
             {
-//                context.setScissorRectangle(null);
+				Starling.current.mNativeOverlay.clipRectangle = null;
             }
         }
         

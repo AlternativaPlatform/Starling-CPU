@@ -3,10 +3,13 @@ package starling.core {
 	import flash.display.BlendMode;
 	import flash.display.Shape;
 	import flash.display.Sprite;
+	import flash.geom.Rectangle;
 
 	public class NativeOverlay extends Sprite {
 
 		private var mDrawCount:int = 0;
+
+		public var clipRectangle:Rectangle;
 
 		public function NativeOverlay() {
 		}
