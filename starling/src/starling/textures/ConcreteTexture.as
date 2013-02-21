@@ -73,22 +73,22 @@ package starling.textures
         private function onContextCreated(event:Event):void
         {
 //            var context:Context3D = Starling.context;
-            var bitmapData:BitmapData = mData as BitmapData;
-            var atfData:AtfData = mData as AtfData;
+//            var bitmapData:BitmapData = mData as BitmapData;
+//            var atfData:AtfData = mData as AtfData;
 //            var nativeTexture:flash.display3D.textures.Texture;
             
-            if (bitmapData)
-            {
+//            if (bitmapData)
+//            {
 //                nativeTexture = context.createTexture(mWidth, mHeight,
 //                    Context3DTextureFormat.BGRA, mOptimizedForRenderTexture);
 //                Texture.uploadBitmapData(nativeTexture, bitmapData, mMipMapping);
-            }
-            else if (atfData)
-            {
+//            }
+//            else if (atfData)
+//            {
 //                nativeTexture = context.createTexture(atfData.width, atfData.height, atfData.format,
 //                                                      mOptimizedForRenderTexture);
 //                Texture.uploadAtfData(nativeTexture, atfData.data);
-            }
+//            }
             
 //            mBase = nativeTexture;
         }

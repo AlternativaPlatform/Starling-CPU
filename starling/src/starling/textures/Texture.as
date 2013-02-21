@@ -23,7 +23,6 @@ package starling.textures
 	import starling.core.Starling;
 	import starling.errors.AbstractClassError;
 	import starling.utils.VertexData;
-	import starling.utils.getNextPowerOfTwo;
 
 	/** <p>A texture stores the information that represents an image. It cannot be added to the
      *  display list directly; instead it has to be mapped onto a display object. In Starling, 
@@ -126,32 +125,33 @@ package starling.textures
         {
             var origWidth:int   = data.width;
             var origHeight:int  = data.height;
-            var legalWidth:int  = getNextPowerOfTwo(origWidth);
-            var legalHeight:int = getNextPowerOfTwo(origHeight);
-            var potData:BitmapData;
+//            var legalWidth:int  = getNextPowerOfTwo(origWidth);
+//            var legalHeight:int = getNextPowerOfTwo(origHeight);
+//            var potData:BitmapData;
             
-            if (legalWidth > origWidth || legalHeight > origHeight)
-            {
-                potData = new BitmapData(legalWidth, legalHeight, true, 0);
-                potData.copyPixels(data, data.rect, sOrigin);
-                data = potData;
-            }
+//            if (legalWidth > origWidth || legalHeight > origHeight)
+//            {
+//                potData = new BitmapData(legalWidth, legalHeight, true, 0);
+//                potData.copyPixels(data, data.rect, sOrigin);
+//                data = potData;
+//            }
             
             var concreteTexture:ConcreteTexture = new ConcreteTexture(
-                null, null, legalWidth, legalHeight,
+//                null, null, legalWidth, legalHeight,
+                null, null, origWidth, origHeight,
                 generateMipMaps, true, optimizeForRenderToTexture, scale);
 
 			concreteTexture.bitmapData = data;
             
-            if (Starling.handleLostContext)
-                concreteTexture.restoreOnLostContext(data);
+//            if (Starling.handleLostContext)
+//                concreteTexture.restoreOnLostContext(data);
 
-            if (origWidth == legalWidth && origHeight == legalHeight)
+//            if (origWidth == legalWidth && origHeight == legalHeight)
                 return concreteTexture;
-            else
-                return new SubTexture(concreteTexture, 
-                                      new Rectangle(0, 0, origWidth/scale, origHeight/scale), 
-                                      true);
+//            else
+//                return new SubTexture(concreteTexture,
+//                                      new Rectangle(0, 0, origWidth/scale, origHeight/scale),
+//                                      true);
         }
         
         /** Creates a texture from the compressed ATF format. If you don't want to use any embedded
@@ -238,16 +238,17 @@ package starling.textures
             
             var origWidth:int  = width * scale;
             var origHeight:int = height * scale;
-            var legalWidth:int  = getNextPowerOfTwo(origWidth);
-            var legalHeight:int = getNextPowerOfTwo(origHeight);
+//            var legalWidth:int  = getNextPowerOfTwo(origWidth);
+//            var legalHeight:int = getNextPowerOfTwo(origHeight);
 
             var concreteTexture:ConcreteTexture = new ConcreteTexture(null, null,
-                legalWidth, legalHeight, false, premultipliedAlpha, optimizeForRenderToTexture, scale);
-            
-            if (origWidth == legalWidth && origHeight == legalHeight)
+//                legalWidth, legalHeight, false, premultipliedAlpha, optimizeForRenderToTexture, scale);
+                origWidth, origHeight, false, premultipliedAlpha, optimizeForRenderToTexture, scale);
+
+//            if (origWidth == legalWidth && origHeight == legalHeight)
                 return concreteTexture;
-            else
-                return new SubTexture(concreteTexture, new Rectangle(0, 0, width, height), true);
+//            else
+//                return new SubTexture(concreteTexture, new Rectangle(0, 0, width, height), true);
         }
         
         /** Creates a texture that contains a region (in pixels) of another texture. The new
