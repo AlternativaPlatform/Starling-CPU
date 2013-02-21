@@ -73,23 +73,23 @@ package starling.utils
             var sinY:Number = Math.sin(skewY);
             var cosY:Number = Math.cos(skewY);
             
-			matrix.a = matrix.a  * cosY - matrix.b  * sinX;
-			matrix.b = matrix.a  * sinY + matrix.b  * cosX;
-			matrix.c = matrix.c  * cosY - matrix.d  * sinX;
-			matrix.d = matrix.c  * sinY + matrix.d  * cosX;
-			matrix.tx = matrix.tx * cosY - matrix.ty * sinX;
-			matrix.ty = matrix.tx * sinY + matrix.ty * cosX;
+            setTo(matrix, matrix.a  * cosY - matrix.b  * sinX,
+                         matrix.a  * sinY + matrix.b  * cosX,
+                         matrix.c  * cosY - matrix.d  * sinX,
+                         matrix.c  * sinY + matrix.d  * cosX,
+                         matrix.tx * cosY - matrix.ty * sinX,
+                         matrix.tx * sinY + matrix.ty * cosX);
         }
         
         /** Prepends a matrix to 'base' by multiplying it with another matrix. */
         public static function prependMatrix(base:Matrix, prep:Matrix):void
         {
-			base.a = base.a * prep.a + base.c * prep.b;
-			base.b = base.b * prep.a + base.d * prep.b;
-			base.c = base.a * prep.c + base.c * prep.d;
-			base.d = base.b * prep.c + base.d * prep.d;
-			base.tx = base.tx + base.a * prep.tx + base.c * prep.ty;
-			base.ty = base.ty + base.b * prep.tx + base.d * prep.ty;
+            setTo(base, base.a * prep.a + base.c * prep.b,
+                       base.b * prep.a + base.d * prep.b,
+                       base.a * prep.c + base.c * prep.d,
+                       base.b * prep.c + base.d * prep.d,
+                       base.tx + base.a * prep.tx + base.c * prep.ty,
+                       base.ty + base.b * prep.tx + base.d * prep.ty);
         }
         
         /** Prepends an incremental translation to a Matrix object. */
@@ -102,10 +102,9 @@ package starling.utils
         /** Prepends an incremental scale change to a Matrix object. */
         public static function prependScale(matrix:Matrix, sx:Number, sy:Number):void
         {
-			matrix.a = matrix.a * sx;
-			matrix.b = matrix.b * sy;
-			matrix.c = matrix.c * sy;
-			matrix.c = matrix.d * sy;
+            setTo(matrix, matrix.a * sx, matrix.b * sx,
+                         matrix.c * sy, matrix.d * sy,
+                         matrix.tx, matrix.ty);
         }
         
         /** Prepends an incremental rotation to a Matrix object (angle in radians). */
@@ -114,10 +113,9 @@ package starling.utils
             var sin:Number = Math.sin(angle);
             var cos:Number = Math.cos(angle);
             
-			matrix.a = matrix.a * cos + matrix.c * sin;
-			matrix.b = matrix.b * cos + matrix.d * sin;
-			matrix.c = matrix.c * cos - matrix.a * sin;
-			matrix.d = matrix.d * cos - matrix.b * sin;
+            setTo(matrix, matrix.a * cos + matrix.c * sin,  matrix.b * cos + matrix.d * sin,
+                         matrix.c * cos - matrix.a * sin,  matrix.d * cos - matrix.b * sin,
+                         matrix.tx, matrix.ty);
         }
         
         /** Prepends a skew transformation to a Matrix object (angles in radians). The skew matrix
@@ -135,10 +133,11 @@ package starling.utils
             var sinY:Number = Math.sin(skewY);
             var cosY:Number = Math.cos(skewY);
             
-			matrix.a = matrix.a * cosY + matrix.c * sinY;
-			matrix.b = matrix.b * cosY + matrix.d * sinY;
-			matrix.c = matrix.c * cosX - matrix.a * sinX;
-			matrix.d = matrix.d * cosX - matrix.b * sinX;
+            setTo(matrix, matrix.a * cosY + matrix.c * sinY,
+                         matrix.b * cosY + matrix.d * sinY,
+                         matrix.c * cosX - matrix.a * sinX,
+                         matrix.d * cosX - matrix.b * sinX,
+                         matrix.tx, matrix.ty);
         }
 
 		public static function copyFrom(destination:Matrix, source:Matrix):void {
@@ -148,6 +147,15 @@ package starling.utils
 			destination.d = source.d;
 			destination.tx = source.tx;
 			destination.ty = source.ty;
+		}
+
+		public static function setTo(matrix:Matrix, a:Number, b:Number, c:Number, d:Number, tx:Number, ty:Number):void {
+			matrix.a = a;
+			matrix.b = b;
+			matrix.c = c;
+			matrix.d = d;
+			matrix.tx = tx;
+			matrix.ty = ty;
 		}
 
     }
