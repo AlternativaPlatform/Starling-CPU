@@ -135,7 +135,7 @@ package starling.display
 		private function uploadData():void {
 		}
 
-		private function calculateTriangles(projection:Matrix, backWidth:int, backHeight:int, clipRect:Rectangle = null):void {
+		private function calculateTriangles(projection:Matrix, backWidth:int, backHeight:int, clipRect:Rectangle = null, offsetU:Number = 0, offsetV:Number = 0):void {
 			var halfW:Number = backWidth*0.5;
 			var halfH:Number = backHeight*0.5;
 
@@ -174,8 +174,8 @@ package starling.display
 
 				calculatedVertexData[dst]          = dX;
 				calculatedVertexData[int(dst + 1)] = dY;
-				calculatedUVsData[dst] = srcVertices[int(src + 6)];
-				calculatedUVsData[int(dst + 1)] = srcVertices[int(src + 7)];
+				calculatedUVsData[dst] = srcVertices[int(src + 6)] + offsetU;
+				calculatedUVsData[int(dst + 1)] = srcVertices[int(src + 7)] + offsetV;
 			}
 			var numIndices:int = numQuads*6;
 			if (clipRect != null) {
@@ -364,13 +364,19 @@ package starling.display
             if (mNumQuads == 0) return;
             if (mSyncRequired) syncBuffers();
 
-			calculateTriangles(mvpMatrix, Starling.current.renderSupport.backBufferWidth, Starling.current.renderSupport.backBufferHeight, Starling.current.mNativeOverlay.clipRectangle);
+			var bitmapData:BitmapData = (mTexture != null) ? mTexture.root.bitmapData : null;
+			var offsetU:Number = 0, offsetV:Number = 0;
+			if (bitmapData != null) {
+//				offsetU = 0.5/bitmapData.width;
+//				offsetV = 1/bitmapData.height;
+			}
+			calculateTriangles(mvpMatrix, Starling.current.renderSupport.backBufferWidth, Starling.current.renderSupport.backBufferHeight, Starling.current.mNativeOverlay.clipRectangle, offsetU, offsetV);
 
 			if (blendMode == null) blendMode = this.blendMode;
 			var canvas:Graphics = (blendMode == BlendMode.NONE) ? Starling.current.mNativeOverlay.nextDraw(1).graphics : Starling.current.mNativeOverlay.nextDraw(mAlpha*parentAlpha, blendMode).graphics;
-			if (mTexture) {
+			if (bitmapData != null) {
 //				drawTriangles(canvas, mTexture.root.bitmapData, calculatedVertexData, calculatedIndexData, calculatedUVsData);
-				canvas.beginBitmapFill(mTexture.root.bitmapData, null, false, true);
+				canvas.beginBitmapFill(bitmapData, null, false, false);
 				canvas.drawTriangles(calculatedVertexData, calculatedIndexData, calculatedUVsData);
 			} else {
 //				canvas.beginFill(0xFF9D00, 0.5);
@@ -425,7 +431,7 @@ package starling.display
 //					drawMatrix.b /= bitmap.width;
 //					drawMatrix.d /= bitmap.height;
 
-					graphics.beginBitmapFill(bitmap, drawMatrix, false, true);
+					graphics.beginBitmapFill(bitmap, drawMatrix, false, false);
 //					graphics.beginFill(0xFF00, 0.5);
 					graphics.moveTo(ax, ay);
 					graphics.lineTo(bx, by);
