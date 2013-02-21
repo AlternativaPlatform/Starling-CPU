@@ -23,6 +23,7 @@ package starling.display
 	import starling.filters.FragmentFilter;
 	import starling.filters.FragmentFilterMode;
 	import starling.textures.Texture;
+	import starling.textures.TextureSmoothing;
 	import starling.utils.MatrixUtil;
 	import starling.utils.VertexData;
 
@@ -375,9 +376,9 @@ package starling.display
 			if (blendMode == null) blendMode = this.blendMode;
 			var canvas:Graphics = (blendMode == BlendMode.NONE) ? Starling.current.mNativeOverlay.nextDraw(1).graphics : Starling.current.mNativeOverlay.nextDraw(mAlpha*parentAlpha, blendMode).graphics;
 			if (bitmapData != null) {
-//				drawTriangles(canvas, mTexture.root.bitmapData, calculatedVertexData, calculatedIndexData, calculatedUVsData);
-				canvas.beginBitmapFill(bitmapData, null, false, false);
-				canvas.drawTriangles(calculatedVertexData, calculatedIndexData, calculatedUVsData);
+				drawTriangles(canvas, mTexture.root.bitmapData, calculatedVertexData, calculatedIndexData, calculatedUVsData, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
+//				canvas.beginBitmapFill(bitmapData, null, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
+//				canvas.drawTriangles(calculatedVertexData, calculatedIndexData, calculatedUVsData);
 			} else {
 //				canvas.beginFill(0xFF9D00, 0.5);
 //				canvas.drawTriangles(calculatedVertexData, calculatedIndexData);
@@ -385,7 +386,7 @@ package starling.display
         }
 
 		private static const drawMatrix:Matrix = new Matrix();
-		private function drawTriangles(graphics:Graphics, bitmap:BitmapData, vertices:Vector.<Number>, indices:Vector.<int>, uvs:Vector.<Number>):void {
+		private function drawTriangles(graphics:Graphics, bitmap:BitmapData, vertices:Vector.<Number>, indices:Vector.<int>, uvs:Vector.<Number>, repeat:Boolean, smoothing):void {
 			// TODO: use calculated bitmap fill when uv vertices has affine transformation
 			var bmdW:int = bitmap.width;
 			var bmdH:int = bitmap.height;
@@ -431,7 +432,7 @@ package starling.display
 //					drawMatrix.b /= bitmap.width;
 //					drawMatrix.d /= bitmap.height;
 
-					graphics.beginBitmapFill(bitmap, drawMatrix, false, false);
+					graphics.beginBitmapFill(bitmap, drawMatrix, repeat, smoothing);
 //					graphics.beginFill(0xFF00, 0.5);
 					graphics.moveTo(ax, ay);
 					graphics.lineTo(bx, by);
