@@ -67,9 +67,11 @@ package starling.display
         private var mSmoothing:String;
         
         private var mVertexData:VertexData;
-        private var mIndexData:Vector.<uint>;
+		// each quad is four points
+        private var mQuadsIndexData:Vector.<int>;
 
 		private var calculatedIndexData:Vector.<int> = new Vector.<int>();
+		private var calculatedNgonsCountsData:Vector.<int> = new Vector.<int>();
 		private var calculatedVertexData:Vector.<Number> = new Vector.<Number>();
 		private var calculatedUVsData:Vector.<Number> = new Vector.<Number>();
 
@@ -80,7 +82,7 @@ package starling.display
         public function QuadBatch()
         {
             mVertexData = new VertexData(0, true);
-            mIndexData = new Vector.<uint>();
+            mQuadsIndexData = new Vector.<int>();
             mNumQuads = 0;
 			mAlpha = 1;
             mSyncRequired = false;
@@ -91,7 +93,7 @@ package starling.display
         {
             var clone:QuadBatch = new QuadBatch();
             clone.mVertexData = mVertexData.clone(0, mNumQuads * 4);
-            clone.mIndexData = mIndexData.slice(0, mNumQuads * 6);
+            clone.mQuadsIndexData = mQuadsIndexData.slice(0, mNumQuads * 6);
             clone.mNumQuads = mNumQuads;
 //            clone.mTinted = mTinted;
 			clone.mAlpha = mAlpha;
@@ -115,12 +117,10 @@ package starling.display
             
             for (var i:int=oldCapacity; i<newCapacity; ++i)
             {
-                mIndexData[int(i*6  )] = i*4;
-                mIndexData[int(i*6+1)] = i*4 + 1;
-                mIndexData[int(i*6+2)] = i*4 + 2;
-                mIndexData[int(i*6+3)] = i*4 + 1;
-                mIndexData[int(i*6+4)] = i*4 + 3;
-                mIndexData[int(i*6+5)] = i*4 + 2;
+				mQuadsIndexData[int(i*4    )] = i*4;
+				mQuadsIndexData[int(i*4 + 1)] = i*4 + 1;
+				mQuadsIndexData[int(i*4 + 2)] = i*4 + 3;
+				mQuadsIndexData[int(i*4 + 3)] = i*4 + 2;
             }
             
             uploadData();
@@ -136,7 +136,8 @@ package starling.display
 		private function uploadData():void {
 		}
 
-		private function calculateTriangles(projection:Matrix, backWidth:int, backHeight:int, clipRect:Rectangle = null, offsetU:Number = 0, offsetV:Number = 0):void {
+		// returns type of polygons : 0 - triangles, 1 - quads, 2 - ngons
+		private function calculatePolygons(projection:Matrix, backWidth:int, backHeight:int, clipRect:Rectangle = null, triangulate:Boolean = true, offsetU:Number = 0, offsetV:Number = 0):int {
 			var halfW:Number = backWidth*0.5;
 			var halfH:Number = backHeight*0.5;
 
@@ -178,23 +179,44 @@ package starling.display
 				calculatedUVsData[dst] = srcVertices[int(src + 6)] + offsetU;
 				calculatedUVsData[int(dst + 1)] = srcVertices[int(src + 7)] + offsetV;
 			}
-			var numIndices:int = numQuads*6;
 			if (clipRect != null) {
-				clipIndices(clipRect, minX, maxX, minY, maxY);
+				calculatedIndexData.length = 0;
+				calculatedNgonsCountsData.length = 0;
+				clipIndices(clipRect, minX, maxX, minY, maxY, triangulate);
+				return triangulate ? 0 : 2;
 			} else {
-				calculatedIndexData.length = numIndices;
-				for (i = 0; i < numIndices; i++) {
-					calculatedIndexData[i] = mIndexData[i];
+				calculatedNgonsCountsData.length = 0;
+				var numIndices:int;
+				if (triangulate) {
+					numIndices = numQuads << 2;
+					calculatedIndexData.length = numQuads*6;
+					for (i = 0; i < numIndices; i+=4) {
+						var index:int = (i >> 2)*6;
+						calculatedIndexData[index] = mQuadsIndexData[i];
+						calculatedIndexData[int(index + 1)] = mQuadsIndexData[int(i + 1)];
+						calculatedIndexData[int(index + 2)] = mQuadsIndexData[int(i + 3)];
+						calculatedIndexData[int(index + 3)] = mQuadsIndexData[int(i + 1)];
+						calculatedIndexData[int(index + 4)] = mQuadsIndexData[int(i + 2)];
+						calculatedIndexData[int(index + 5)] = mQuadsIndexData[int(i + 3)];
+					}
+					return 0;
+				} else {
+					numIndices = numQuads << 2;
+					calculatedIndexData.length = numIndices;
+					for (i = 0; i < numIndices; i++) {
+						calculatedIndexData[i] = mQuadsIndexData[i];
+					}
+					return 1;
 				}
 			}
+			return 0;
 		}
 
 		private var points1:Vector.<int> = new Vector.<int>();
 		private var points2:Vector.<int> = new Vector.<int>();
 
-		private function clipIndices(rect:Rectangle, minX:Number, maxX:Number, minY:Number, maxY:Number):void {
-			var numIndices:int = numQuads*6;
-			calculatedIndexData.length = 0;
+		private function clipIndices(rect:Rectangle, minX:Number, maxX:Number, minY:Number, maxY:Number, triangulate:Boolean):void {
+			var numIndices:int = numQuads*4;
 
 			var left:Number = rect.x;
 			var top:Number = rect.y;
@@ -203,15 +225,16 @@ package starling.display
 
 			if (maxX <= left || maxY <= top || minX >= right || minY >= bottom) return;
 
-			for (var i:int = 0; i < numIndices; i += 3) {
+			for (var i:int = 0; i < numIndices; i += 4) {
 //			for (var i:int = 0; i < 3; i += 3) {
-				var a:int = mIndexData[i];
-				var b:int = mIndexData[int(i + 1)];
-				var c:int = mIndexData[int(i + 2)];
+				var a:int = mQuadsIndexData[i];
+				var b:int = mQuadsIndexData[int(i + 1)];
+				var c:int = mQuadsIndexData[int(i + 2)];
 				points1[0] = a;
 				points1[1] = b;
 				points1[2] = c;
-				points1.length = 3;
+				points1[3] = mQuadsIndexData[int(i + 3)];
+				points1.length = 4;
 
 				var valid:Boolean = true;
 				valid &&= clipTriangleX(points2, points1, left, 1);
@@ -219,20 +242,33 @@ package starling.display
 				valid &&= clipTriangleY(points2, points1, top, 1);
 				valid &&= clipTriangleY(points1, points2, bottom, -1);
 				if (valid) {
-					triangulate(points1);
-//					triangulate(points2);
+					if (triangulate) {
+						collectTriangles(points1);
+//						triangulate(points2);
+					} else {
+						collectNgons(points1);
+					}
 				}
 			}
 		}
 
-		private function triangulate(points:Vector.<int>):void {
+		private function collectTriangles(points:Vector.<int>):void {
+			var count:int = points.length;
 			var a:int, b:int, c:int;
 			a = points[0];
 			b = points[1];
-			for (var j:int = 2; j < points.length; j++) {
+			for (var j:int = 2; j < count; j++) {
 				c = points[j];
 				calculatedIndexData.push(a, b, c);
 				b = c;
+			}
+		}
+
+		private function collectNgons(points:Vector.<int>):void {
+			var count:int = points.length;
+			calculatedNgonsCountsData.push(count);
+			for (var i:int = 0; i < count; i++) {
+				calculatedIndexData.push(points[i]);
 			}
 		}
 
@@ -365,20 +401,27 @@ package starling.display
             if (mNumQuads == 0) return;
             if (mSyncRequired) syncBuffers();
 
+			const useDrawTrianglesFP10:Boolean = false;
+
 			var bitmapData:BitmapData = (mTexture != null) ? mTexture.root.bitmapData : null;
 			var offsetU:Number = 0, offsetV:Number = 0;
 			if (bitmapData != null) {
 //				offsetU = 0.5/bitmapData.width;
 //				offsetV = 1/bitmapData.height;
 			}
-			calculateTriangles(mvpMatrix, Starling.current.renderSupport.backBufferWidth, Starling.current.renderSupport.backBufferHeight, Starling.current.mNativeOverlay.clipRectangle, offsetU, offsetV);
+			var type:int = calculatePolygons(mvpMatrix, Starling.current.renderSupport.backBufferWidth, Starling.current.renderSupport.backBufferHeight, Starling.current.mNativeOverlay.clipRectangle, useDrawTrianglesFP10, offsetU, offsetV);
 
 			if (blendMode == null) blendMode = this.blendMode;
 			var canvas:Graphics = (blendMode == BlendMode.NONE) ? Starling.current.mNativeOverlay.nextDraw(1).graphics : Starling.current.mNativeOverlay.nextDraw(mAlpha*parentAlpha, blendMode).graphics;
 			if (bitmapData != null) {
-				drawTriangles(canvas, mTexture.root.bitmapData, calculatedVertexData, calculatedIndexData, calculatedUVsData, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
-//				canvas.beginBitmapFill(bitmapData, null, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
-//				canvas.drawTriangles(calculatedVertexData, calculatedIndexData, calculatedUVsData);
+				if (useDrawTrianglesFP10) {
+					canvas.beginBitmapFill(bitmapData, null, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
+					canvas.drawTriangles(calculatedVertexData, calculatedIndexData, calculatedUVsData);
+				} else {
+					if (type == 0) drawTriangles(canvas, bitmapData, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
+					if (type == 1) drawQuads(canvas, bitmapData, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
+					if (type == 2) drawNgons(canvas, bitmapData, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
+				}
 			} else {
 //				canvas.beginFill(0xFF9D00, 0.5);
 //				canvas.drawTriangles(calculatedVertexData, calculatedIndexData);
@@ -386,31 +429,31 @@ package starling.display
         }
 
 		private static const drawMatrix:Matrix = new Matrix();
-		private function drawTriangles(graphics:Graphics, bitmap:BitmapData, vertices:Vector.<Number>, indices:Vector.<int>, uvs:Vector.<Number>, repeat:Boolean, smoothing):void {
+		private function drawTriangles(graphics:Graphics, bitmap:BitmapData, repeat:Boolean, smoothing:Boolean):void {
 			// TODO: use calculated bitmap fill when uv vertices has affine transformation
 			var bmdW:int = bitmap.width;
 			var bmdH:int = bitmap.height;
-			var numIndices:int = indices.length;
+			var numIndices:int = calculatedIndexData.length;
 			for (var i:int = 0; i < numIndices; i += 3) {
-				var a:int = indices[i] << 1;
-				var b:int = indices[int(i + 1)] << 1;
-				var c:int = indices[int(i + 2)] << 1;
-				var ax:Number = vertices[a];
-				var ay:Number = vertices[int(a + 1)];
-				var bx:Number = vertices[b];
-				var by:Number = vertices[int(b + 1)];
-				var cx:Number = vertices[c];
-				var cy:Number = vertices[int(c + 1)];
+				var a:int = calculatedIndexData[i] << 1;
+				var b:int = calculatedIndexData[int(i + 1)] << 1;
+				var c:int = calculatedIndexData[int(i + 2)] << 1;
+				var ax:Number = calculatedVertexData[a];
+				var ay:Number = calculatedVertexData[int(a + 1)];
+				var bx:Number = calculatedVertexData[b];
+				var by:Number = calculatedVertexData[int(b + 1)];
+				var cx:Number = calculatedVertexData[c];
+				var cy:Number = calculatedVertexData[int(c + 1)];
 				var abx:Number = bx - ax;
 				var aby:Number = by - ay;
 				var acx:Number = cx - ax;
 				var acy:Number = cy - ay;
-				var au:Number = uvs[a];
-				var av:Number = uvs[int(a + 1)];
-				var abu:Number = (uvs[b] - au)*bmdW;
-				var abv:Number = (uvs[int(b + 1)] - av)*bmdH;
-				var acu:Number = (uvs[c] - au)*bmdW;
-				var acv:Number = (uvs[int(c + 1)] - av)*bmdH;
+				var au:Number = calculatedUVsData[a];
+				var av:Number = calculatedUVsData[int(a + 1)];
+				var abu:Number = (calculatedUVsData[b] - au)*bmdW;
+				var abv:Number = (calculatedUVsData[int(b + 1)] - av)*bmdH;
+				var acu:Number = (calculatedUVsData[c] - au)*bmdW;
+				var acv:Number = (calculatedUVsData[int(c + 1)] - av)*bmdH;
 				au *= bmdW;
 				av *= bmdH;
 				var uvDet:Number = abu*acv - acu*abv;
@@ -442,8 +485,132 @@ package starling.display
 				}
 			}
 		}
-        
-        /** Resets the batch. The vertex- and index-buffers remain their size, so that they
+
+		private function drawQuads(graphics:Graphics, bitmap:BitmapData, repeat:Boolean, smoothing:Boolean):void {
+			// TODO: use calculated bitmap fill when uv vertices has affine transformation
+			var bmdW:int = bitmap.width;
+			var bmdH:int = bitmap.height;
+			var numIndices:int = calculatedIndexData.length;
+			for (var i:int = 0; i < numIndices; i += 4) {
+				var a:int = calculatedIndexData[i] << 1;
+				var b:int = calculatedIndexData[int(i + 1)] << 1;
+				var c:int = calculatedIndexData[int(i + 2)] << 1;
+				var d:int = calculatedIndexData[int(i + 3)] << 1;
+				var ax:Number = calculatedVertexData[a];
+				var ay:Number = calculatedVertexData[int(a + 1)];
+				var bx:Number = calculatedVertexData[b];
+				var by:Number = calculatedVertexData[int(b + 1)];
+				var cx:Number = calculatedVertexData[c];
+				var cy:Number = calculatedVertexData[int(c + 1)];
+				var dx:Number = calculatedVertexData[d];
+				var dy:Number = calculatedVertexData[int(d + 1)];
+				var abx:Number = bx - ax;
+				var aby:Number = by - ay;
+				var acx:Number = cx - ax;
+				var acy:Number = cy - ay;
+				var au:Number = calculatedUVsData[a];
+				var av:Number = calculatedUVsData[int(a + 1)];
+				var abu:Number = (calculatedUVsData[b] - au)*bmdW;
+				var abv:Number = (calculatedUVsData[int(b + 1)] - av)*bmdH;
+				var acu:Number = (calculatedUVsData[c] - au)*bmdW;
+				var acv:Number = (calculatedUVsData[int(c + 1)] - av)*bmdH;
+				au *= bmdW;
+				av *= bmdH;
+				var uvDet:Number = abu*acv - acu*abv;
+				if (uvDet > 0.01 || uvDet < -0.01) {
+					var m11:Number = acv/uvDet;
+					var m12:Number = -acu/uvDet;
+					var m21:Number = -abv/uvDet;
+					var m22:Number = abu/uvDet;
+
+					drawMatrix.a = abx*m11 + acx*m21;
+					drawMatrix.c = abx*m12 + acx*m22;
+					drawMatrix.b = aby*m11 + acy*m21;
+					drawMatrix.d = aby*m12 + acy*m22;
+					drawMatrix.tx = -au*drawMatrix.a - av*drawMatrix.c + ax;
+					drawMatrix.ty = -au*drawMatrix.b - av*drawMatrix.d + ay;
+
+//					drawMatrix.a /= bitmap.width;
+//					drawMatrix.c /= bitmap.height;
+//					drawMatrix.b /= bitmap.width;
+//					drawMatrix.d /= bitmap.height;
+
+					graphics.beginBitmapFill(bitmap, drawMatrix, repeat, smoothing);
+//					graphics.beginFill(0xFF00, 0.5);
+					graphics.moveTo(ax, ay);
+					graphics.lineTo(bx, by);
+					graphics.lineTo(cx, cy);
+					graphics.lineTo(dx, dy);
+				} else {
+//					trace("ERROR: uv determinant:", uvDet);
+				}
+			}
+		}
+
+		private function drawNgons(graphics:Graphics, bitmap:BitmapData, repeat:Boolean, smoothing:Boolean):void {
+			// TODO: use calculated bitmap fill when uv vertices has affine transformation
+			var bmdW:int = bitmap.width;
+			var bmdH:int = bitmap.height;
+			var index:int = 0;
+			for (var i:int = 0; i < numQuads; i++) {
+				var count:int = calculatedNgonsCountsData[i];
+				var a:int = calculatedIndexData[index] << 1;
+				var b:int = calculatedIndexData[int(index + 1)] << 1;
+				var c:int = calculatedIndexData[int(index + 2)] << 1;
+				var ax:Number = calculatedVertexData[a];
+				var ay:Number = calculatedVertexData[int(a + 1)];
+				var bx:Number = calculatedVertexData[b];
+				var by:Number = calculatedVertexData[int(b + 1)];
+				var cx:Number = calculatedVertexData[c];
+				var cy:Number = calculatedVertexData[int(c + 1)];
+				var abx:Number = bx - ax;
+				var aby:Number = by - ay;
+				var acx:Number = cx - ax;
+				var acy:Number = cy - ay;
+				var au:Number = calculatedUVsData[a];
+				var av:Number = calculatedUVsData[int(a + 1)];
+				var abu:Number = (calculatedUVsData[b] - au)*bmdW;
+				var abv:Number = (calculatedUVsData[int(b + 1)] - av)*bmdH;
+				var acu:Number = (calculatedUVsData[c] - au)*bmdW;
+				var acv:Number = (calculatedUVsData[int(c + 1)] - av)*bmdH;
+				au *= bmdW;
+				av *= bmdH;
+				var uvDet:Number = abu*acv - acu*abv;
+				if (uvDet > 0.01 || uvDet < -0.01) {
+					var m11:Number = acv/uvDet;
+					var m12:Number = -acu/uvDet;
+					var m21:Number = -abv/uvDet;
+					var m22:Number = abu/uvDet;
+
+					drawMatrix.a = abx*m11 + acx*m21;
+					drawMatrix.c = abx*m12 + acx*m22;
+					drawMatrix.b = aby*m11 + acy*m21;
+					drawMatrix.d = aby*m12 + acy*m22;
+					drawMatrix.tx = -au*drawMatrix.a - av*drawMatrix.c + ax;
+					drawMatrix.ty = -au*drawMatrix.b - av*drawMatrix.d + ay;
+
+//					drawMatrix.a /= bitmap.width;
+//					drawMatrix.c /= bitmap.height;
+//					drawMatrix.b /= bitmap.width;
+//					drawMatrix.d /= bitmap.height;
+
+					graphics.beginBitmapFill(bitmap, drawMatrix, repeat, smoothing);
+//					graphics.beginFill(0xFF00, 0.5);
+					graphics.moveTo(ax, ay);
+					graphics.lineTo(bx, by);
+					graphics.lineTo(cx, cy);
+					for (var j:int = 3; j < count; j++) {
+						var d:int = calculatedIndexData[int(index + j)] << 1;
+						graphics.lineTo(calculatedVertexData[d], calculatedVertexData[int(d + 1)]);
+					}
+				} else {
+//					trace("ERROR: uv determinant:", uvDet);
+				}
+				index += count;
+			}
+		}
+
+		/** Resets the batch. The vertex- and index-buffers remain their size, so that they
          *  can be reused quickly. */  
         public function reset():void
         {
