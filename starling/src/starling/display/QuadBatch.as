@@ -244,7 +244,7 @@ package starling.display
 				if (valid) {
 					if (triangulate) {
 						collectTriangles(points1);
-//						triangulate(points2);
+//						collectTriangles(points2);
 					} else {
 						collectNgons(points1);
 					}
@@ -415,8 +415,10 @@ package starling.display
 			var canvas:Graphics = (blendMode == BlendMode.NONE) ? Starling.current.mNativeOverlay.nextDraw(1).graphics : Starling.current.mNativeOverlay.nextDraw(mAlpha*parentAlpha, blendMode).graphics;
 			if (bitmapData != null) {
 				if (useDrawTrianglesFP10) {
-					canvas.beginBitmapFill(bitmapData, null, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
-					canvas.drawTriangles(calculatedVertexData, calculatedIndexData, calculatedUVsData);
+					if (calculatedIndexData.length > 0) {
+						canvas.beginBitmapFill(bitmapData, null, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
+						canvas.drawTriangles(calculatedVertexData, calculatedIndexData, calculatedUVsData);
+					}
 				} else {
 					if (type == 0) drawTriangles(canvas, bitmapData, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
 					if (type == 1) drawQuads(canvas, bitmapData, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
