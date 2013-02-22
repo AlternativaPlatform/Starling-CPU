@@ -1,5 +1,6 @@
 package starling.core {
 
+	import flash.display.Graphics;
 	import flash.display.Shape;
 
 	import starling.display.BlendMode;
@@ -18,7 +19,7 @@ package starling.core {
 				current.alpha = alpha;
 				if (blendMode != null) current.blendMode = blendMode;
 				else current.blendMode = flash.display.BlendMode.NORMAL;
-				current.graphics.clear();
+				current.gfx.clear();
 				collector = collector.next;
 			}
 			return current;
@@ -30,6 +31,12 @@ package starling.core {
 		}
 
 		public var next:OverlayDraw;
+
+		public var gfx:Graphics;
+
+		public function OverlayDraw() {
+			gfx = graphics;
+		}
 
 	}
 }

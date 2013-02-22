@@ -411,7 +411,7 @@ package starling.display
 			var type:int = calculatePolygons(mvpMatrix, Starling.current.renderSupport.backBufferWidth, Starling.current.renderSupport.backBufferHeight, Starling.current.mNativeOverlay.clipRectangle, useDrawTrianglesFP10, offsetU, offsetV);
 
 			if (blendMode == null) blendMode = this.blendMode;
-			var canvas:Graphics = (blendMode == BlendMode.NONE) ? Starling.current.mNativeOverlay.nextDraw(1).graphics : Starling.current.mNativeOverlay.nextDraw(mAlpha*parentAlpha, blendMode).graphics;
+			var canvas:Graphics = (blendMode == BlendMode.NONE) ? Starling.current.mNativeOverlay.getDraw(1).gfx : Starling.current.mNativeOverlay.getDraw(mAlpha*parentAlpha, blendMode).gfx;
 			if (bitmapData != null) {
 				if (useDrawTrianglesFP10) {
 					if (calculatedIndexData.length > 0) {

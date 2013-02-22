@@ -1,7 +1,6 @@
 package starling.core {
 
 	import flash.display.BlendMode;
-	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.geom.Rectangle;
 
@@ -11,6 +10,10 @@ package starling.core {
 
 		public var clipRectangle:Rectangle;
 
+		private var prevDraw:OverlayDraw;
+		private var prevBlendMode:String;
+		private var prevAlpha:Number;
+
 		public function NativeOverlay() {
 		}
 
@@ -18,7 +21,10 @@ package starling.core {
 			mDrawCount = 0;
 		}
 
-		public function nextDraw(alpha:Number = 1.0, blendMode:String = null):Shape {
+		public function getDraw(alpha:Number = 1.0, blendMode:String = null):OverlayDraw {
+			if (prevDraw != null && prevBlendMode == blendMode && prevAlpha == alpha) {
+				return prevDraw;
+			}
 			var current:OverlayDraw = mDrawCount < this.numChildren ? OverlayDraw(this.getChildAt(mDrawCount)) : null;
 			if (current == null) {
 				current = OverlayDraw.create(alpha, blendMode);
@@ -29,6 +35,9 @@ package starling.core {
 				if (blendMode != null) current.blendMode = blendMode; else current.blendMode = BlendMode.NORMAL;
 			}
 			mDrawCount++;
+			prevDraw = current;
+			prevBlendMode = blendMode;
+			prevAlpha = alpha;
 			return current;
 		}
 
@@ -36,6 +45,7 @@ package starling.core {
 			for (var i:int = this.numChildren - 1; i >= mDrawCount; i--) {
 				OverlayDraw.destroy(OverlayDraw(this.removeChildAt(i)));
 			}
+			prevDraw = null;
 		}
 
 	}
