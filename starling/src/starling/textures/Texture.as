@@ -98,7 +98,11 @@ package starling.textures
             
             mRepeat = false;
         }
-        
+
+		public function updateBitmapData(data:BitmapData):void {
+			bitmapData = data;
+		}
+
         /** Disposes the underlying texture data. Note that not all textures need to be disposed: 
          *  SubTextures (created with 'Texture.fromTexture') just reference other textures and
          *  and do not take up resources themselves; this is also true for textures from an 
@@ -116,8 +120,8 @@ package starling.textures
         {
             return fromBitmapData(data.bitmapData, generateMipMaps, optimizeForRenderToTexture, scale);
         }
-        
-        /** Creates a texture from bitmap data. 
+
+        /** Creates a texture from bitmap data.
          *  Beware: you must not dispose 'data' if Starling should handle a lost device context. */
         public static function fromBitmapData(data:BitmapData, generateMipMaps:Boolean=true,
                                               optimizeForRenderToTexture:Boolean=false,
@@ -259,7 +263,7 @@ package starling.textures
             subTexture.mFrame = frame;
             return subTexture;
         }
-        
+
         /** Converts texture coordinates and vertex positions of raw vertex data into the format 
          *  required for rendering. */
         public function adjustVertexData(vertexData:VertexData, vertexID:int, count:int):void

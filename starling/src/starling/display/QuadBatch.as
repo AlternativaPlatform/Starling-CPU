@@ -425,7 +425,7 @@ package starling.display
 				}
 			} else {
 				if (calculatedIndexData.length > 0) {
-					canvas.beginFill(mVertexData.getColor(0));
+					canvas.beginFill(mVertexData.getColor(0), mVertexData.getAlpha(0));
 					canvas.drawTriangles(calculatedVertexData, calculatedIndexData);
 				}
 			}
