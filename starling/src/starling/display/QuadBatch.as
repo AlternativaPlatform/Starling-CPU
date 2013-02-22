@@ -552,7 +552,8 @@ package starling.display
 			var bmdW:int = bitmap.width;
 			var bmdH:int = bitmap.height;
 			var index:int = 0;
-			for (var i:int = 0; i < numQuads; i++) {
+			var numNgons:int = calculatedNgonsCountsData.length;
+			for (var i:int = 0; i < numNgons; i++) {
 				var count:int = calculatedNgonsCountsData[i];
 				var a:int = calculatedIndexData[index] << 1;
 				var b:int = calculatedIndexData[int(index + 1)] << 1;
