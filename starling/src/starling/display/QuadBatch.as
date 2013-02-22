@@ -148,7 +148,7 @@ package starling.display
 			var tx:Number = projection.tx * halfW + halfW;
 			var ty:Number = - projection.ty * halfH + halfH;
 
-			var identity:Boolean = (a == 1) && (d == 1) && (projection.b == 0) && (projection.c == 0) && (projection.tx = -1) && (projection.ty == 1);
+			var identity:Boolean = (a == 1) && (d == 1) && (projection.b == 0) && (projection.c == 0) && (projection.tx == -1) && (projection.ty == 1);
 
 			var i:int;
 			var numVerts:int = numQuads*4;
