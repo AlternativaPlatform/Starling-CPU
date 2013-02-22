@@ -150,8 +150,6 @@ package starling.display
 
 			var identity:Boolean = (a == 1) && (d == 1) && (projection.b == 0) && (projection.c == 0) && (projection.tx = -1) && (projection.ty == 1);
 
-//			trace(a, d, b, c, tx, ty, identity);
-
 			var i:int;
 			var numVerts:int = numQuads*4;
 			var srcVertices:Vector.<Number> = mVertexData.rawData;
@@ -401,14 +399,15 @@ package starling.display
             if (mNumQuads == 0) return;
             if (mSyncRequired) syncBuffers();
 
-			const useDrawTrianglesFP10:Boolean = false;
-
 			var bitmapData:BitmapData = (mTexture != null) ? mTexture.root.bitmapData : null;
 			var offsetU:Number = 0, offsetV:Number = 0;
-			if (bitmapData != null) {
+//			if (bitmapData != null) {
 //				offsetU = 0.5/bitmapData.width;
 //				offsetV = 1/bitmapData.height;
-			}
+//			}
+
+			const useDrawTrianglesFP10:Boolean = bitmapData == null;
+
 			var type:int = calculatePolygons(mvpMatrix, Starling.current.renderSupport.backBufferWidth, Starling.current.renderSupport.backBufferHeight, Starling.current.mNativeOverlay.clipRectangle, useDrawTrianglesFP10, offsetU, offsetV);
 
 			if (blendMode == null) blendMode = this.blendMode;
@@ -425,8 +424,10 @@ package starling.display
 					if (type == 2) drawNgons(canvas, bitmapData, mTexture.repeat, mSmoothing != TextureSmoothing.NONE);
 				}
 			} else {
-//				canvas.beginFill(0xFF9D00, 0.5);
-//				canvas.drawTriangles(calculatedVertexData, calculatedIndexData);
+				if (calculatedIndexData.length > 0) {
+					canvas.beginFill(mVertexData.getColor(0));
+					canvas.drawTriangles(calculatedVertexData, calculatedIndexData);
+				}
 			}
         }
 
